@@ -17,7 +17,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ 
   children, 
-  defaultTheme = "light" 
+  defaultTheme = "system" 
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem("theme") as Theme) || defaultTheme
@@ -34,10 +34,23 @@ export function ThemeProvider({
         ? "dark"
         : "light";
       root.classList.add(systemTheme);
-      return;
+      
+      // Add media query listener to detect system theme changes
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      const handleChange = (e: MediaQueryListEvent) => {
+        root.classList.remove("light", "dark");
+        root.classList.add(e.matches ? "dark" : "light");
+      };
+      
+      mediaQuery.addEventListener("change", handleChange);
+      
+      return () => {
+        mediaQuery.removeEventListener("change", handleChange);
+      };
+    } else {
+      root.classList.add(theme);
     }
     
-    root.classList.add(theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
 
