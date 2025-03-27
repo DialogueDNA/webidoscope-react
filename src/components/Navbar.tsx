@@ -1,13 +1,22 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   const isActive = (path: string) => {
     return location.pathname === path;
+  };
+
+  const handleLogout = () => {
+    // Here you would add your actual logout logic
+    console.log("User logged out");
+    navigate('/');
   };
 
   return (
@@ -18,10 +27,18 @@ const Navbar = () => {
       </div>
       
       <div className="flex items-center space-x-8">
-        <NavLink href="/" active={isActive('/')}>Home</NavLink>
         <NavLink href="/dashboard" active={isActive('/dashboard')}>Dashboard</NavLink>
         <NavLink href="/sessions" active={isActive('/sessions')}>Sessions</NavLink>
         <NavLink href="/settings" active={isActive('/settings')}>Settings</NavLink>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleLogout}
+          className="flex items-center gap-2 text-gray-600 hover:text-black"
+        >
+          <LogOut size={16} />
+          <span>Logout</span>
+        </Button>
       </div>
     </nav>
   );
