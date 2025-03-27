@@ -20,9 +20,9 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="w-full px-6 py-4 flex items-center justify-between bg-white border-b border-gray-100 animate-fade-in">
+    <nav className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-gray-800 dark:text-white border-b border-gray-100 dark:border-gray-700 animate-fade-in">
       <div className="flex items-center space-x-2">
-        <div className="h-8 w-8 bg-black rounded-full"></div>
+        <div className="h-8 w-8 bg-black dark:bg-white rounded-full"></div>
         <span className="font-semibold text-lg">EmotionAI Tool</span>
       </div>
       
@@ -34,7 +34,7 @@ const Navbar = () => {
           variant="ghost" 
           size="sm" 
           onClick={handleLogout}
-          className="flex items-center gap-2 text-gray-600 hover:text-black"
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
         >
           <LogOut size={16} />
           <span>Logout</span>
@@ -55,10 +55,10 @@ const NavLink = ({ href, children, active }: NavLinkProps) => {
     <Link 
       to={href} 
       className={cn(
-        "text-sm font-medium transition-colors hover:text-black relative",
+        "text-sm font-medium transition-colors hover:text-black dark:hover:text-white relative",
         active 
-          ? "text-black after:content-[''] after:absolute after:w-full after:h-0.5 after:bg-black after:bottom-[-8px] after:left-0" 
-          : "text-gray-600"
+          ? "text-black dark:text-white after:content-[''] after:absolute after:w-full after:h-0.5 after:bg-black dark:after:bg-white after:bottom-[-8px] after:left-0" 
+          : "text-gray-600 dark:text-gray-300"
       )}
     >
       {children}

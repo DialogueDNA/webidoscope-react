@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,11 +9,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings as SettingsIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTheme } from '@/providers/ThemeProvider';
 
 const Settings = () => {
+  const { theme, setTheme } = useTheme();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
-  const [theme, setTheme] = useState('light');
   const [language, setLanguage] = useState('english');
   const [apiKey, setApiKey] = useState('');
   const [userName, setUserName] = useState('John Doe');
@@ -32,7 +33,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 dark:text-white">
       <Navbar />
       
       <div className="container mx-auto py-8 px-4 max-w-4xl animate-fade-in">
@@ -41,7 +42,7 @@ const Settings = () => {
           <h1 className="text-3xl font-bold">Settings</h1>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
           <Tabs defaultValue="profile" className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-8">
               <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -75,7 +76,7 @@ const Settings = () => {
                 <div>
                   <Label htmlFor="password">Password</Label>
                   <Input id="password" type="password" value="********" className="mt-1" disabled />
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     To change your password, please use the "Reset Password" feature.
                   </p>
                 </div>
@@ -168,7 +169,7 @@ const Settings = () => {
                     placeholder="Enter your API key" 
                     className="mt-1 font-mono"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     This key is used to connect EmotionAI to external services.
                   </p>
                 </div>
@@ -176,17 +177,17 @@ const Settings = () => {
                 <div>
                   <h3 className="font-medium mb-3">Connected Services</h3>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center justify-between p-3 border rounded-lg dark:border-gray-700">
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                        <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
                         <span>Service 1</span>
                       </div>
                       <Button variant="outline" size="sm">Disconnect</Button>
                     </div>
                     
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center justify-between p-3 border rounded-lg dark:border-gray-700">
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                        <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
                         <span>Service 2</span>
                       </div>
                       <Button variant="outline" size="sm">Disconnect</Button>
