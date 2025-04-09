@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 
 import Index from "./pages/Index";
+import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import Sessions from "./pages/Sessions";
 import SessionSummary from "./pages/SessionSummary";
@@ -24,6 +25,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/signup" element={<SignUp />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/sessions" element={<Sessions />} />
             <Route path="/session/:id" element={<SessionSummary />} />

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
@@ -40,7 +40,7 @@ const LoginForm = () => {
   return (
     <div className="w-full max-w-md p-8 mx-auto glass-card rounded-lg animate-scale-in">
       <div className="flex justify-center mb-6">
-        <div className="h-12 w-12 bg-black rounded-full"></div>
+        <div className="h-12 w-12 bg-black dark:bg-white rounded-full"></div>
       </div>
       <h1 className="text-2xl font-semibold text-center mb-8">EmotionAI</h1>
       
@@ -75,7 +75,7 @@ const LoginForm = () => {
         
         <Button 
           type="submit" 
-          className="w-full bg-black text-white hover:bg-black/90"
+          className="w-full bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
           disabled={isLoading}
         >
           {isLoading ? 'Logging in...' : 'Login'}
@@ -83,9 +83,12 @@ const LoginForm = () => {
       </form>
       
       <div className="mt-6 text-center">
-        <a href="/signup" className="text-sm text-gray-600 hover:text-black transition-colors">
+        <span className="text-sm text-gray-600 dark:text-gray-400">
+          Don't have an account?{" "}
+        </span>
+        <Link to="/signup" className="text-sm font-medium text-black dark:text-white hover:underline">
           Sign Up
-        </a>
+        </Link>
       </div>
     </div>
   );
