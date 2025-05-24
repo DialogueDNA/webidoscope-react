@@ -1,10 +1,12 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import SessionCard from '@/components/SessionCard';
+import NewSessionModal from '@/components/NewSessionModal';
 import { Button } from '@/components/ui/button';
 
 const Sessions = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   // Sample session data
   const sessions = [
     {
@@ -51,6 +53,10 @@ const Sessions = () => {
     }
   ];
 
+  const handleNewSessionClick = () => {
+    setIsModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col page-transition">
       <Navbar />
@@ -58,7 +64,10 @@ const Sessions = () => {
       <div className="flex-1 container mx-auto py-8 px-4">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold animate-fade-in">Sessions</h1>
-          <Button className="bg-black text-white hover:bg-black/90 animate-fade-in">
+          <Button 
+            className="bg-black text-white hover:bg-black/90 animate-fade-in"
+            onClick={handleNewSessionClick}
+          >
             New Session
           </Button>
         </div>
@@ -76,6 +85,11 @@ const Sessions = () => {
           ))}
         </div>
       </div>
+
+      <NewSessionModal 
+        open={isModalOpen} 
+        onOpenChange={setIsModalOpen} 
+      />
     </div>
   );
 };
