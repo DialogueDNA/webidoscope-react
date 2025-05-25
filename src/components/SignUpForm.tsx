@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import { Eye, EyeOff } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const SignUpForm = () => {
   const [fullName, setFullName] = useState('');
@@ -37,33 +38,37 @@ const SignUpForm = () => {
       return;
     }
 
+    if (password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
         },
-        body: JSON.stringify({
-          full_name: fullName,
-          email: email,
-          password: password,
-        }),
       });
 
-      const data = await response.json();
+      if (error) throw error;
 
-      if (!response.ok) {
-        throw new Error(data.detail || "Registration failed");
+      if (data.user) {
+        toast({
+          title: "Success",
+          description: "Your account has been created successfully",
+        });
+        navigate("/"); // Redirect to login page
       }
-
-      toast({
-        title: "Success",
-        description: "Your account has been created",
-      });
-
-      navigate("/"); // Redirect to login page
     } catch (error: any) {
       toast({
         title: "Error",
@@ -74,7 +79,6 @@ const SignUpForm = () => {
       setIsLoading(false);
     }
   };
-
 
   const togglePasswordVisibility = () => {
     setShowPassword(prev => !prev);
