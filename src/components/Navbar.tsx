@@ -5,7 +5,7 @@ import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 const Navbar = () => {
   const location = useLocation();
@@ -33,22 +33,38 @@ const Navbar = () => {
     }
   };
 
+  const handleLiveDashboardClick = () => {
+    toast({
+      title: "Coming Soon",
+      description: "Live Dashboard feature is currently under development",
+    });
+  };
+
   return (
-    <nav className="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-gray-800 dark:text-white border-b border-gray-100 dark:border-gray-700 animate-fade-in">
+    <nav className="w-full px-6 py-4 flex items-center justify-between bg-white border-b border-gray-100 animate-fade-in">
       <div className="flex items-center space-x-2">
-        <div className="h-8 w-8 bg-black dark:bg-white rounded-full"></div>
-        <span className="font-semibold text-lg">EmotionAI Tool</span>
+        <div className="h-8 w-8 bg-black rounded-full"></div>
+        <span className="font-semibold text-lg text-black">EmotionAI Tool</span>
       </div>
       
       <div className="flex items-center space-x-8">
-        <NavLink href="/dashboard" active={isActive('/dashboard')}>Dashboard</NavLink>
+        <button
+          onClick={handleLiveDashboardClick}
+          className="text-sm font-medium transition-colors text-gray-400 cursor-not-allowed relative group"
+          disabled
+        >
+          Live Dashboard
+          <div className="absolute bottom-[-32px] left-1/2 transform -translate-x-1/2 bg-black text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            Coming Soon
+          </div>
+        </button>
         <NavLink href="/sessions" active={isActive('/sessions')}>Sessions</NavLink>
         <NavLink href="/settings" active={isActive('/settings')}>Settings</NavLink>
         <Button 
           variant="ghost" 
           size="sm" 
           onClick={handleLogout}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+          className="flex items-center gap-2 text-gray-600 hover:text-black"
         >
           <LogOut size={16} />
           <span>Logout</span>
@@ -69,10 +85,10 @@ const NavLink = ({ href, children, active }: NavLinkProps) => {
     <Link 
       to={href} 
       className={cn(
-        "text-sm font-medium transition-colors hover:text-black dark:hover:text-white relative",
+        "text-sm font-medium transition-colors hover:text-black relative",
         active 
-          ? "text-black dark:text-white after:content-[''] after:absolute after:w-full after:h-0.5 after:bg-black dark:after:bg-white after:bottom-[-8px] after:left-0" 
-          : "text-gray-600 dark:text-gray-300"
+          ? "text-black after:content-[''] after:absolute after:w-full after:h-0.5 after:bg-black after:bottom-[-8px] after:left-0" 
+          : "text-gray-600"
       )}
     >
       {children}
