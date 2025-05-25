@@ -1,5 +1,7 @@
 
 import React, { useState } from 'react';
+import axios from 'axios'
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,9 +36,17 @@ const NewSessionModal = ({ open, onOpenChange }: NewSessionModalProps) => {
     }
 
     setIsUploading(true);
-    
-    // Simulate file upload processing
-    setTimeout(() => {
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const response = await axios.post('http://127.0.0.1:8000/sessions/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
       setIsUploading(false);
       onOpenChange(false);
       setSelectedFile(null);
@@ -44,7 +54,29 @@ const NewSessionModal = ({ open, onOpenChange }: NewSessionModalProps) => {
         title: "Success",
         description: "Audio file uploaded successfully and is being processed",
       });
-    }, 2000);
+
+      console.log('File uploaded successfully:', response.data);
+    } catch (error: any) {
+        console.error("Upload failed:", error);
+        console.error("Response:", error?.response);
+        console.error("Data:", error?.response?.data);
+        toast({
+          title: "Upload failed",
+          description: error?.response?.data?.detail || "An unexpected error occurred",
+          variant: "destructive",
+        });
+    }
+
+    // Simulate file upload processing
+    // setTimeout(() => {
+    //   setIsUploading(false);
+    //   onOpenChange(false);
+    //   setSelectedFile(null);
+    //   toast({
+    //     title: "Success",
+    //     description: "Audio file uploaded successfully and is being processed",
+    //   });
+    // }, 2000);
   };
 
   const handleClose = () => {
