@@ -12,30 +12,57 @@ const LoginForm = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
+  e.preventDefault();
+
+  if (!email || !password) {
+    toast({
+      title: "Error",
+      description: "Please fill in all fields",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    const formData = new URLSearchParams();
+    formData.append("username", email);
+    formData.append("password", password);
+
+    const response = await fetch("http://127.0.0.1:8000/auth/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formData.toString(),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Login failed");
     }
-    
-    setIsLoading(true);
-    
-    // Simulate login process
-    setTimeout(() => {
-      setIsLoading(false);
-      // In a real app, you would validate credentials here
-      navigate('/dashboard');
-      toast({
-        title: "Success",
-        description: "You have successfully logged in",
-      });
-    }, 1000);
-  };
+
+    // Save token (you can also use cookies or context)
+    localStorage.setItem("access_token", data.access_token);
+
+    toast({
+      title: "Success",
+      description: "You have successfully logged in",
+    });
+
+    navigate("/dashboard");
+  } catch (error: any) {
+    toast({
+      title: "Error",
+      description: error.message,
+      variant: "destructive",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="w-full max-w-md p-8 mx-auto glass-card rounded-lg animate-scale-in">

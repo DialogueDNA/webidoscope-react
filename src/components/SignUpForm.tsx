@@ -18,8 +18,7 @@ const SignUpForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Basic form validation
+
     if (!fullName || !email || !password || !confirmPassword) {
       toast({
         title: "Error",
@@ -37,19 +36,45 @@ const SignUpForm = () => {
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
-    // Simulate signup process
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate('/dashboard');
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          full_name: fullName,
+          email: email,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Registration failed");
+      }
+
       toast({
         title: "Success",
         description: "Your account has been created",
       });
-    }, 1000);
+
+      navigate("/"); // Redirect to login page
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
 
   const togglePasswordVisibility = () => {
     setShowPassword(prev => !prev);
