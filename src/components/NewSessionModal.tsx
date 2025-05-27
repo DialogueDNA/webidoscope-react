@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -7,14 +6,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Upload } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import {apiClient} from "@/lib/apiClient.ts";
 
+/**
+ * Props for NewSessionModal.
+ * @property open - Whether the modal is open.
+ * @property onOpenChange - Callback to change modal open state.
+ */
 interface NewSessionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+/**
+ * NewSessionModal allows users to create a new session by uploading an audio file.
+ * It handles file selection, validation, upload to Supabase, and session creation.
+ */
 const NewSessionModal = ({ open, onOpenChange }: NewSessionModalProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sessionTitle, setSessionTitle] = useState('');
@@ -22,6 +30,9 @@ const NewSessionModal = ({ open, onOpenChange }: NewSessionModalProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  /**
+   * Handles file input change, validates audio type, and sets session title.
+   */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -40,6 +51,10 @@ const NewSessionModal = ({ open, onOpenChange }: NewSessionModalProps) => {
     }
   };
 
+  /**
+   * Handles the upload process: uploads file to Supabase, creates session record,
+   * and sends file to backend for processing.
+   */
   const handleUpload = async () => {
     if (!selectedFile || !user) {
       toast({
@@ -62,56 +77,27 @@ const NewSessionModal = ({ open, onOpenChange }: NewSessionModalProps) => {
     setIsUploading(true);
 
     try {
-      // Upload audio file to Supabase Storage
-      const fileName = `${user.id}/${Date.now()}-${selectedFile.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('audio-sessions')
-        .upload(fileName, selectedFile);
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("title", sessionTitle.trim());
 
-      if (uploadError) throw uploadError;
-
-      // Create session record in database
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('sessions')
-        .insert({
-          user_id: user.id,
-          title: sessionTitle.trim(),
-          audio_file_url: uploadData.path,
-          duration: null, // Will be populated after processing
-          participants: [],
-        })
-        .select()
-        .single();
-
-      if (sessionError) throw sessionError;
-
-      // Send to backend for processing (optional - for transcription/analysis)
-      try {
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-        formData.append('sessionId', sessionData.id);
-        
-        await fetch('/api/upload-audio', {
-          method: 'POST',
-          body: formData,
-        });
-      } catch (backendError) {
-        console.warn('Backend processing failed:', backendError);
-        // Continue anyway - the session was created successfully
-      }
+      const response = await apiClient("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
       setIsUploading(false);
       onOpenChange(false);
       setSelectedFile(null);
       setSessionTitle('');
-      
+
       toast({
         title: "Success",
         description: "Session created successfully! Processing audio...",
       });
 
       // Redirect to the new session
-      navigate(`/session/${sessionData.id}`);
+      navigate(`/session/${response.session_id}`);
 
     } catch (error: any) {
       console.error("Upload failed:", error);
@@ -124,6 +110,9 @@ const NewSessionModal = ({ open, onOpenChange }: NewSessionModalProps) => {
     }
   };
 
+  /**
+   * Handles modal close and resets state.
+   */
   const handleClose = () => {
     setSelectedFile(null);
     setSessionTitle('');
@@ -136,7 +125,7 @@ const NewSessionModal = ({ open, onOpenChange }: NewSessionModalProps) => {
         <DialogHeader>
           <DialogTitle>Create New Session</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="session-title">Session Title</Label>

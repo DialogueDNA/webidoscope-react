@@ -1,8 +1,7 @@
 
-import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import {apiClient} from "@/lib/apiClient.ts";
 
 export interface Session {
   id: string;
@@ -24,16 +23,9 @@ export const useSessionsData = () => {
   return useQuery({
     queryKey: ['sessions', user?.id],
     queryFn: async () => {
-      if (!user) return [];
-      
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as Session[];
+      console.log("Fetching sessions for user:", user?.id);
+      const res = await apiClient("/api/sessions");
+      return res as Session[];
     },
     enabled: !!user,
   });
@@ -41,21 +33,12 @@ export const useSessionsData = () => {
 
 export const useSessionDetail = (sessionId: string) => {
   const { user } = useAuth();
-
   return useQuery({
     queryKey: ['session', sessionId],
     queryFn: async () => {
-      if (!user) return null;
-      
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (error) throw error;
-      return data as Session;
+      if (!user || !sessionId) return null;
+      const res = await apiClient(`/api/sessions/${sessionId}`);
+      return res as Session;
     },
     enabled: !!user && !!sessionId,
   });
