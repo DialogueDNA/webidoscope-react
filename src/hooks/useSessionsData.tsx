@@ -20,7 +20,7 @@ export const useSessionsData = () => {
   return useQuery({
     queryKey: ['sessions', user?.id],
     queryFn: async () => {
-      const res = await apiClient("/api/metadata");
+      const res = await apiClient("/api/sessions/metadata");
       return res ?? []; // Ensure not undefined
     },
     enabled: !!user,
@@ -39,7 +39,7 @@ export const useSessionMetadata = (sessionId: string) => {
     queryKey: ['session', sessionId, 'metadata'],
     queryFn: async () => {
       if (!user || !sessionId) return { status: 'Error', data: null };
-      const res = await apiClient(`/api/metadata/${sessionId}`);
+      const res = await apiClient(`/api/sessions/metadata/${sessionId}`);
       return res ?? { status: 'Error', data: null };
     },
     enabled: !!user && !!sessionId,
@@ -53,7 +53,7 @@ export const useSessionSummary = (sessionId: string) => {
     queryKey: ['session', sessionId, 'summary'],
     queryFn: async () => {
       if (!user || !sessionId) return { status: 'Error', data: null };
-      const res = await apiClient(`/api/summary/${sessionId}`);
+      const res = await apiClient(`/api/sessions/summary/${sessionId}`);
       return res ?? { status: 'Error', data: null };
     },
     enabled: !!user && !!sessionId,
@@ -67,7 +67,7 @@ export const useSessionTranscript = (sessionId: string) => {
     queryKey: ['session', sessionId, 'transcript'],
     queryFn: async () => {
       if (!user || !sessionId) return { status: 'Error', data: null };
-      const res = await apiClient(`/api/transcript/${sessionId}`);
+      const res = await apiClient(`/api/sessions/transcript/${sessionId}`);
       return res ?? { status: 'Error', data: null };
     },
     enabled: !!user && !!sessionId,
@@ -81,7 +81,7 @@ export const useSessionEmotion = (sessionId: string) => {
     queryKey: ['session', sessionId, 'emotion'],
     queryFn: async () => {
       if (!user || !sessionId) return { status: 'Error', data: null };
-      const res = await apiClient(`/api/emotions/${sessionId}`);
+      const res = await apiClient(`/api/sessions/emotions/${sessionId}`);
       return res ?? { status: 'Error', data: null };
     },
     enabled: !!user && !!sessionId,
@@ -95,7 +95,7 @@ export const useSessionAudio = (sessionId: string) => {
     queryKey: ['session', sessionId, 'audio'],
     queryFn: async () => {
       if (!user || !sessionId) return { status: 'Error', data: null };
-      const res = await apiClient(`/api/audio/${sessionId}`);
+      const res = await apiClient(`/api/sessions/audio/${sessionId}`)
       return res ?? { status: 'Error', data: null };
     },
     enabled: !!user && !!sessionId,

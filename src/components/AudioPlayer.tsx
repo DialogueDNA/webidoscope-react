@@ -1,133 +1,64 @@
-
-import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Play, Square } from 'lucide-react';
+import React from "react";
 
 interface AudioPlayerProps {
   audioUrl: string;
   duration?: number;
-  onTimeUpdate?: (currentTime: number) => void;
-  className?: string;
+  onTimeUpdate?: (time: number) => void;
 }
 
-const AudioPlayer: React.FC<AudioPlayerProps> = ({
-  audioUrl,
-  duration,
-  onTimeUpdate,
-  className = '',
-}) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [audioDuration, setAudioDuration] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const audioRef = useRef<HTMLAudioElement>(null);
+const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, duration, onTimeUpdate }) => {
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(false);
+  const audioRef = React.useRef<HTMLAudioElement>(null);
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+  const handleLoadedMetadata = () => {
+    setLoading(false);
+  };
 
-    const handleLoadedMetadata = () => {
-      setAudioDuration(audio.duration);
-      setIsLoading(false);
-    };
+  const handleCanPlay = () => {
+    setLoading(false);
+  };
 
-    const handleTimeUpdate = () => {
-      const time = audio.currentTime;
-      setCurrentTime(time);
-      onTimeUpdate?.(time);
-    };
+  const handleError = () => {
+    setLoading(false);
+    setError(true);
+    console.error("❌ Failed to load audio");
+  };
 
-    const handleEnded = () => {
-      setIsPlaying(false);
-      setCurrentTime(0);
-      onTimeUpdate?.(0);
-    };
-
-    const handleError = () => {
-      setIsLoading(false);
-      console.error('Error loading audio');
-    };
-
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('error', handleError);
-
-    return () => {
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
-    };
-  }, [onTimeUpdate]);
-
-  const togglePlayPause = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play();
+  const handleTimeUpdate = () => {
+    if (onTimeUpdate && audioRef.current) {
+      onTimeUpdate(audioRef.current.currentTime);
     }
-    setIsPlaying(!isPlaying);
   };
-
-  const handleSeek = (value: number[]) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const seekTime = value[0];
-    audio.currentTime = seekTime;
-    setCurrentTime(seekTime);
-    onTimeUpdate?.(seekTime);
-  };
-
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  if (isLoading) {
-    return (
-      <div className={`glass-card rounded-lg p-4 ${className}`}>
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
-          <span className="ml-2 text-gray-600">Loading audio...</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className={`glass-card rounded-lg p-4 ${className}`}>
-      <audio ref={audioRef} src={audioUrl} preload="metadata" />
-      
-      <div className="flex items-center gap-4">
-        <Button
-          onClick={togglePlayPause}
-          className="bg-black text-white hover:bg-black/90"
-          size="icon"
-        >
-          {isPlaying ? <Square size={16} /> : <Play size={16} />}
-        </Button>
-        
-        <div className="flex-1">
-          <Slider
-            value={[currentTime]}
-            max={audioDuration}
-            step={0.1}
-            onValueChange={handleSeek}
-            className="w-full"
-          />
+    <div className="w-full">
+      {loading && !error && (
+        <div className="flex items-center justify-center h-16 text-gray-500">
+          <span className="animate-spin mr-2 h-5 w-5 border-2 border-gray-300 border-t-black rounded-full"></span>
+          Loading audio...
         </div>
-        
-        <div className="text-sm text-gray-600 min-w-[100px] text-right">
-          {formatTime(currentTime)} / {formatTime(audioDuration)}
-        </div>
-      </div>
+      )}
+      {error && (
+        <p className="text-red-500">Audio could not be loaded. Please try again later.</p>
+      )}
+      <audio
+        ref={audioRef}
+        controls
+        className="w-full mt-2"
+        src={audioUrl}
+        onLoadedMetadata={handleLoadedMetadata}
+        onCanPlay={handleCanPlay}
+        onError={handleError}
+        onTimeUpdate={handleTimeUpdate}
+      >
+        Your browser does not support the audio element.
+      </audio>
+      {duration && (
+        <p className="text-sm text-gray-500 mt-1">
+          Approx. duration: {Math.floor(duration)} seconds
+        </p>
+      )}
     </div>
   );
 };

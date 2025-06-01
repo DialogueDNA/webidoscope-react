@@ -64,6 +64,14 @@ const SessionSummary = () => {
   const [resolvedTranscript, setResolvedTranscript] = React.useState<string | null>(null);
   const [resolvedSummary, setResolvedSummary] = React.useState<string | null>(null);
   const [resolvedEmotions, setResolvedEmotions] = React.useState<any | null>(null);
+  const [resolvedAudio, setResolvedAudio] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (audioResponse?.status === 'completed' && audioResponse.data) {
+      setResolvedAudio(audioResponse.data);
+    }
+  }, [audioResponse]);
+
 
   React.useEffect(() => {
     if (transcriptResponse?.status === 'completed' && transcriptResponse.data) {
@@ -135,7 +143,6 @@ const SessionSummary = () => {
   };
 
   const parseTranscript = (text: string | null) => {
-    console.log(text)
     if (!text) return [];
     return text.split('\n').filter(Boolean).map(line => {
       const [speaker, ...rest] = line.split(':');
@@ -182,25 +189,41 @@ const SessionSummary = () => {
   const transcriptMessages = parseTranscript(resolvedTranscript);
   const emotionData = generateEmotionData(resolvedEmotions);
 
-  console.log(emotionResponse?.status);
+  console.log(audioResponse?.status);
+  console.log(resolvedAudio);
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
       <Navbar />
       <div className="flex-1 container mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-8">{metadata.title}</h1>
-
-        {/* Audio Player Section */}
-        {audioResponse?.status === 'completed' && audioResponse.data && (
-          <div className="mb-8">
+        {audioResponse?.status === 'not_started' && (
+          <div className="glass-card rounded-lg p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-4">Audio Playback</h2>
+            <p className="text-gray-500 italic">Audio has not been uploaded yet.</p>
+          </div>
+        )}
+        {audioResponse?.status === 'processing' && (
+          <div className="glass-card rounded-lg p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-4">Audio Playback</h2>
+            <p className="text-gray-500 animate-pulse">Audio is still being processed...</p>
+          </div>
+        )}
+        {(audioError || audioResponse?.status === 'failed') && (
+          <div className="glass-card rounded-lg p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-4">Audio Playback</h2>
+            <p className="text-red-500">Failed to load audio file.</p>
+          </div>
+        )}
+        {audioResponse?.status === 'completed' && resolvedAudio && (
+          <div className="glass-card rounded-lg p-6 mb-8">
             <h2 className="text-xl font-semibold mb-4">Audio Playback</h2>
             <AudioPlayer
-              audioUrl={audioResponse.data}
+              audioUrl={resolvedAudio}
               duration={metadata.duration || undefined}
               onTimeUpdate={handleTimeUpdate}
             />
           </div>
         )}
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <div className="glass-card rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Session Summary</h2>

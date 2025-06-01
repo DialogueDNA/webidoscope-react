@@ -1,6 +1,5 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/apiClient';
 import { toast } from '@/hooks/use-toast';
 
 export const useDeleteSession = () => {
@@ -8,12 +7,15 @@ export const useDeleteSession = () => {
 
   return useMutation({
     mutationFn: async (sessionId: string) => {
-      const { error } = await supabase
-        .from('sessions')
-        .delete()
-        .eq('id', sessionId);
-      
-      if (error) throw error;
+      const res = await apiClient(`/api/sessions/delete/${sessionId}`, {
+        method: 'DELETE',
+      });
+
+      if (!res?.success) {
+        throw new Error('Failed to delete session');
+      }
+
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
@@ -38,12 +40,19 @@ export const useDeleteMultipleSessions = () => {
 
   return useMutation({
     mutationFn: async (sessionIds: string[]) => {
-      const { error } = await supabase
-        .from('sessions')
-        .delete()
-        .in('id', sessionIds);
-      
-      if (error) throw error;
+      const res = await apiClient(`/api/sessions/delete/bulk`, {
+        method: 'POST',
+        body: JSON.stringify({ session_ids: sessionIds }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res?.success) {
+        throw new Error('Failed to delete sessions');
+      }
+
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
