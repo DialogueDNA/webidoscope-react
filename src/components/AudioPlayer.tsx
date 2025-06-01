@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Play, Stop } from 'lucide-react';
+import { Play, Square } from 'lucide-react';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -111,7 +111,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           className="bg-black text-white hover:bg-black/90"
           size="icon"
         >
-          {isPlaying ? <Stop size={16} /> : <Play size={16} />}
+          {isPlaying ? <Square size={16} /> : <Play size={16} />}
         </Button>
         
         <div className="flex-1">
