@@ -2,24 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/apiClient.ts';
 
-export interface Session {
-  id: string;
-  title: string;
-  audio_file_url: string | null;
-  transcript: string | null;
-  emotion_breakdown: any | null;
-  summary: string | null;
-  duration: number | null;
-  participants: string[] | null;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-}
-
 interface Metadata {
   id: string;
   title: string;
-  status: 'Processing' | 'Ready';
+  status: 'not_started' | 'queued' | 'processing' | 'ready' | 'error';
   summary: string;
   duration: number | null;
   participants: string[] | null;
@@ -42,7 +28,7 @@ export const useSessionsData = () => {
 };
 
 type ApiResponse<T> = {
-  status: 'Processing' | 'Ready' | 'Error';
+  status: 'not_started' | 'queued' | 'processing' | 'completed' | 'failed';
   data: T | null;
 };
 
@@ -96,6 +82,20 @@ export const useSessionEmotion = (sessionId: string) => {
     queryFn: async () => {
       if (!user || !sessionId) return { status: 'Error', data: null };
       const res = await apiClient(`/api/emotions/${sessionId}`);
+      return res ?? { status: 'Error', data: null };
+    },
+    enabled: !!user && !!sessionId,
+  });
+};
+
+export const useSessionAudio = (sessionId: string) => {
+  const { user } = useAuth();
+
+  return useQuery<ApiResponse<string>, Error>({
+    queryKey: ['session', sessionId, 'audio'],
+    queryFn: async () => {
+      if (!user || !sessionId) return { status: 'Error', data: null };
+      const res = await apiClient(`/api/audio/${sessionId}`);
       return res ?? { status: 'Error', data: null };
     },
     enabled: !!user && !!sessionId,

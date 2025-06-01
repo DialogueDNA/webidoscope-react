@@ -9,7 +9,7 @@ import {
   useSessionEmotion,
   useSessionTranscript,
   useSessionSummary,
-  useSessionMetadata
+  useSessionMetadata, useSessionAudio
 } from '@/hooks/useSessionsData';
 import { usePollUntilReady } from '@/hooks/usePollUntilReady';
 import { toast } from '@/hooks/use-toast';
@@ -46,20 +46,56 @@ const SessionSummary = () => {
     refetch: refetchEmotion
   } = useSessionEmotion(id || '');
 
+  const {
+    data: audioResponse,
+    isLoading: loadingAudio,
+    error: audioError,
+    refetch: refetchAudio
+  } = useSessionAudio(id || '');
+
   usePollUntilReady(metadataResponse?.status, refetchMetadata);
   usePollUntilReady(summaryResponse?.status, refetchSummary);
   usePollUntilReady(transcriptResponse?.status, refetchTranscript);
   usePollUntilReady(emotionResponse?.status, refetchEmotion);
+  usePollUntilReady(audioResponse?.status, refetchAudio);
+
+  const [resolvedTranscript, setResolvedTranscript] = React.useState<string | null>(null);
+  const [resolvedSummary, setResolvedSummary] = React.useState<string | null>(null);
+  const [resolvedEmotions, setResolvedEmotions] = React.useState<any | null>(null);
+
+  React.useEffect(() => {
+    if (transcriptResponse?.status === 'completed' && transcriptResponse.data) {
+      fetch(transcriptResponse.data)
+        .then(res => res.text())
+        .then(setResolvedTranscript)
+        .catch(() => setResolvedTranscript(null));
+    }
+  }, [transcriptResponse]);
+
+  React.useEffect(() => {
+    if (summaryResponse?.status === 'completed' && summaryResponse.data) {
+      fetch(summaryResponse.data)
+        .then(res => res.text())
+        .then(setResolvedSummary)
+        .catch(() => setResolvedSummary(null));
+    }
+  }, [summaryResponse]);
+
+  React.useEffect(() => {
+    if (emotionResponse?.status === 'completed' && emotionResponse.data) {
+      fetch(emotionResponse.data)
+        .then(res => res.json())
+        .then(setResolvedEmotions)
+        .catch(() => setResolvedEmotions(null));
+    }
+  }, [emotionResponse]);
 
   const metadata = metadataResponse?.data;
-  const summary = summaryResponse?.data;
-  const transcript = transcriptResponse?.data;
-  const emotions = emotionResponse?.data;
 
   const handleBackToSessions = () => navigate('/sessions');
 
   const handleDownloadPDF = async () => {
-    if (!summary || !metadata) return;
+    if (!resolvedSummary || !metadata) return;
     try {
       const response = await fetch(`/api/summary/${metadata.id}/download`, {
         method: 'GET',
@@ -113,7 +149,7 @@ const SessionSummary = () => {
     return Object.entries(data).map(([time, value]) => ({ name: time, value: Number(value) }));
   };
 
-  if (loadingMetadata || metadataResponse?.status === 'Processing') {
+  if (loadingMetadata || metadataResponse?.status != 'completed') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <Navbar />
@@ -122,7 +158,7 @@ const SessionSummary = () => {
     );
   }
 
-  if (metadataError || metadataResponse?.status === 'Error' || !metadata) {
+  if (metadataError || metadataResponse?.status != 'completed' || !metadata) {
     return (
       <div className="min-h-screen bg-gray-100 flex flex-col">
         <Navbar />
@@ -137,9 +173,10 @@ const SessionSummary = () => {
     );
   }
 
-  const transcriptMessages = parseTranscript(transcript);
-  const emotionData = generateEmotionData(emotions);
+  const transcriptMessages = parseTranscript(resolvedTranscript);
+  const emotionData = generateEmotionData(resolvedEmotions);
 
+  console.log(emotionResponse?.status);
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
       <Navbar />
@@ -149,38 +186,44 @@ const SessionSummary = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <div className="glass-card rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Session Summary</h2>
-            {summaryResponse?.status === 'Processing' ? (
-              <p className="text-gray-500 animate-pulse">Summary is still being generated...</p>
-            ) : summaryError || summaryResponse?.status === 'Error' ? (
-              <p className="text-red-500">Failed to load summary.</p>
-            ) : (
-              <p className="text-gray-700 leading-relaxed">{summary}</p>
-            )}
+            {summaryResponse?.status === 'not_started' ? (
+                <p className="text-gray-500 italic">Summary has not been generated yet.</p>
+              ) : summaryResponse?.status === 'processing' ? (
+                <p className="text-gray-500 animate-pulse">Summary is still being generated...</p>
+              ) : summaryError || summaryResponse?.status === 'failed' ? (
+                <p className="text-red-500">Failed to load summary.</p>
+              ) : (
+                <p className="text-gray-700 leading-relaxed">{resolvedSummary}</p>
+              )}
           </div>
 
           <div className="glass-card rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Emotional Shifts</h2>
-            {emotionResponse?.status === 'Processing' ? (
-              <p className="text-gray-500 animate-pulse">Analyzing emotions...</p>
-            ) : emotionsError || emotionResponse?.status === 'Error' ? (
-              <p className="text-red-500">Failed to load emotion data.</p>
-            ) : (
-              <EmotionChart data={emotionData} title="" height={250} />
-            )}
+            {emotionResponse?.status === 'not_started' ? (
+                <p className="text-gray-500 italic">Emotion analysis has not started.</p>
+              ) : emotionResponse?.status === 'processing' ? (
+                <p className="text-gray-500 animate-pulse">Analyzing emotions...</p>
+              ) : emotionsError || emotionResponse?.status === 'failed' ? (
+                <p className="text-red-500">Failed to load emotion data.</p>
+              ) : (
+                <EmotionChart data={emotionData} title="" height={250} />
+              )}
           </div>
         </div>
 
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Transcript</h2>
-          {transcriptResponse?.status === 'Processing' ? (
-            <p className="text-gray-500 animate-pulse">Transcribing audio...</p>
-          ) : transcriptError || transcriptResponse?.status === 'Error' ? (
-            <p className="text-red-500">Could not load transcript.</p>
-          ) : transcriptMessages.length > 0 ? (
-            <TranscriptionCard messages={transcriptMessages} title="" />
-          ) : (
-            <p className="text-gray-600">No transcript available.</p>
-          )}
+          {transcriptResponse?.status === 'not_started' ? (
+                <p className="text-gray-500 italic">Transcription has not started yet.</p>
+              ) : transcriptResponse?.status === 'processing' ? (
+                <p className="text-gray-500 animate-pulse">Transcribing audio...</p>
+              ) : transcriptError || transcriptResponse?.status === 'failed' ? (
+                <p className="text-red-500">Could not load transcript.</p>
+              ) : transcriptMessages.length > 0 ? (
+                <TranscriptionCard messages={transcriptMessages} title="" />
+              ) : (
+                <p className="text-gray-600">No transcript available.</p>
+              )}
         </div>
 
         <div className="glass-card rounded-lg p-6 mb-8">
