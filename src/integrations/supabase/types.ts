@@ -11,41 +11,110 @@ export type Database = {
     Tables: {
       sessions: {
         Row: {
+          audio_file_status:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
           audio_file_url: string | null
           created_at: string
           duration: number | null
-          emotion_breakdown: Json | null
+          emotion_breakdown_status:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
+          emotion_breakdown_url: Json | null
           id: string
+          is_favorite: boolean | null
+          language: string | null
+          metadata_status:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
           participants: string[] | null
-          summary: string | null
+          processing_error: string | null
+          session_status:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
+          source: string | null
+          summary_status:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
+          summary_url: string | null
+          tags: string[] | null
           title: string
-          transcript: string | null
+          transcript_status:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
+          transcript_url: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          audio_file_status?:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
           audio_file_url?: string | null
           created_at?: string
           duration?: number | null
-          emotion_breakdown?: Json | null
+          emotion_breakdown_status?:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
+          emotion_breakdown_url?: Json | null
           id?: string
+          is_favorite?: boolean | null
+          language?: string | null
+          metadata_status?:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
           participants?: string[] | null
-          summary?: string | null
+          processing_error?: string | null
+          session_status?:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
+          source?: string | null
+          summary_status?:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
+          summary_url?: string | null
+          tags?: string[] | null
           title: string
-          transcript?: string | null
+          transcript_status?:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
+          transcript_url?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          audio_file_status?:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
           audio_file_url?: string | null
           created_at?: string
           duration?: number | null
-          emotion_breakdown?: Json | null
+          emotion_breakdown_status?:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
+          emotion_breakdown_url?: Json | null
           id?: string
+          is_favorite?: boolean | null
+          language?: string | null
+          metadata_status?:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
           participants?: string[] | null
-          summary?: string | null
+          processing_error?: string | null
+          session_status?:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
+          source?: string | null
+          summary_status?:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
+          summary_url?: string | null
+          tags?: string[] | null
           title?: string
-          transcript?: string | null
+          transcript_status?:
+            | Database["public"]["Enums"]["processing_status"]
+            | null
+          transcript_url?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -59,7 +128,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      processing_status:
+        | "not_started"
+        | "queued"
+        | "processing"
+        | "completed"
+        | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -174,6 +248,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      processing_status: [
+        "not_started",
+        "queued",
+        "processing",
+        "completed",
+        "failed",
+      ],
+    },
   },
 } as const

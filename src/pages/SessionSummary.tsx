@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import EmotionChart from '@/components/EmotionChart';
 import TranscriptionCard from '@/components/TranscriptionCard';
+import AudioPlayer from '@/components/AudioPlayer';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import {
@@ -17,6 +18,7 @@ import { toast } from '@/hooks/use-toast';
 const SessionSummary = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [currentTime, setCurrentTime] = React.useState<number>(0);
 
   const {
     data: metadataResponse,
@@ -149,6 +151,10 @@ const SessionSummary = () => {
     return Object.entries(data).map(([time, value]) => ({ name: time, value: Number(value) }));
   };
 
+  const handleTimeUpdate = (time: number) => {
+    setCurrentTime(time);
+  };
+
   if (loadingMetadata || metadataResponse?.status != 'completed') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -183,6 +189,18 @@ const SessionSummary = () => {
       <div className="flex-1 container mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-8">{metadata.title}</h1>
 
+        {/* Audio Player Section */}
+        {audioResponse?.status === 'completed' && audioResponse.data && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">Audio Playback</h2>
+            <AudioPlayer
+              audioUrl={audioResponse.data}
+              duration={metadata.duration || undefined}
+              onTimeUpdate={handleTimeUpdate}
+            />
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <div className="glass-card rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Session Summary</h2>
@@ -206,7 +224,12 @@ const SessionSummary = () => {
               ) : emotionsError || emotionResponse?.status === 'failed' ? (
                 <p className="text-red-500">Failed to load emotion data.</p>
               ) : (
-                <EmotionChart data={emotionData} title="" height={250} />
+                <EmotionChart 
+                  data={emotionData} 
+                  title="" 
+                  height={250} 
+                  currentTime={currentTime}
+                />
               )}
           </div>
         </div>
@@ -220,7 +243,11 @@ const SessionSummary = () => {
               ) : transcriptError || transcriptResponse?.status === 'failed' ? (
                 <p className="text-red-500">Could not load transcript.</p>
               ) : transcriptMessages.length > 0 ? (
-                <TranscriptionCard messages={transcriptMessages} title="" />
+                <TranscriptionCard 
+                  messages={transcriptMessages} 
+                  title="" 
+                  currentTime={currentTime}
+                />
               ) : (
                 <p className="text-gray-600">No transcript available.</p>
               )}
