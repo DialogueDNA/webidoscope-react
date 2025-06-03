@@ -1,4 +1,5 @@
 import React from 'react';
+import { marked } from "marked";
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import EmotionChart from '@/components/EmotionChart';
@@ -135,28 +136,86 @@ const SessionSummary = () => {
     year: 'numeric', month: 'long', day: 'numeric'
   });
 
-  const formatDuration = (minutes: number | null) => {
-    if (!minutes) return 'Unknown duration';
-    const hours = Math.floor(minutes / 60);
-    const rem = minutes % 60;
-    return hours ? `${hours}h ${rem}m` : `${minutes} minutes`;
+  const formatDuration = (seconds: number | null) => {
+    if (!seconds) return 'Unknown duration';
+
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+
+    const parts = [];
+    if (h > 0) parts.push(`${h}h`);
+    if (m > 0) parts.push(`${m}m`);
+    if (s > 0 || parts.length === 0) parts.push(`${s}s`);
+
+    return parts.join(' ');
   };
 
-  const parseTranscript = (text: string | null) => {
-    if (!text) return [];
-    return text.split('\n').filter(Boolean).map(line => {
-      const [speaker, ...rest] = line.split(':');
-      return {
-        speaker: speaker?.trim() || 'Unknown',
-        text: rest.join(':').trim()
+
+
+  const renderMarkdown = (markdown: string) => {
+    return marked.parse(markdown);
+  };
+
+  type TranscriptEntry = {
+    speaker: string;
+    text: string;
+  };
+
+  const parseTranscript = (json: string | null): TranscriptEntry[] => {
+    if (!json) return [];
+
+    try {
+      const parsed = JSON.parse(json);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter(
+            (entry) => entry.speaker !== undefined && entry.text !== undefined
+          )
+          .map((entry) => ({
+            speaker: typeof entry.speaker === "number"
+              ? `Speaker ${entry.speaker}`
+              : String(entry.speaker),
+            text: entry.text,
+          }));
+      }
+    } catch (error) {
+      console.error("Failed to parse transcript JSON:", error);
+    }
+
+    return [];
+  };
+
+  type EmotionRaw = {
+    speaker: string;
+    text: string;
+    start_time: number;
+    end_time: number;
+    emotions: { label: string; score: number }[];
+  };
+
+  type ChartPoint = {
+    start_time: string;
+    [emotionLabel: string]: number | string;
+  };
+
+  const generateEmotionChartData = (raw: EmotionRaw[]): ChartPoint[] => {
+    if (!raw || raw.length === 0) return [];
+
+    return raw.map((entry) => {
+      const point: ChartPoint = {
+        start_time: entry.start_time.toFixed(2), // Use time as X-axis label
       };
+
+      for (const emotion of entry.emotions) {
+        point[emotion.label.toLowerCase()] = parseFloat((emotion.score * 100).toFixed(2));
+      }
+
+      return point;
     });
   };
 
-  const generateEmotionData = (data: any) => {
-    if (!data) return [];
-    return Object.entries(data).map(([time, value]) => ({ name: time, value: Number(value) }));
-  };
+
 
   const handleTimeUpdate = (time: number) => {
     setCurrentTime(time);
@@ -186,11 +245,10 @@ const SessionSummary = () => {
     );
   }
 
-  const transcriptMessages = parseTranscript(resolvedTranscript);
-  const emotionData = generateEmotionData(resolvedEmotions);
 
-  console.log(audioResponse?.status);
-  console.log(resolvedAudio);
+  const transcriptMessages = parseTranscript(resolvedTranscript);
+  const emotionData = generateEmotionChartData(resolvedEmotions);
+  console.log('Emotion Data:', emotionResponse?.status);
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
       <Navbar />
@@ -234,7 +292,10 @@ const SessionSummary = () => {
               ) : summaryError || summaryResponse?.status === 'failed' ? (
                 <p className="text-red-500">Failed to load summary.</p>
               ) : (
-                <p className="text-gray-700 leading-relaxed">{resolvedSummary}</p>
+                <div
+                  className="prose prose-gray max-w-none leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(resolvedSummary || "") }}
+                />
               )}
           </div>
 
@@ -247,10 +308,10 @@ const SessionSummary = () => {
               ) : emotionsError || emotionResponse?.status === 'failed' ? (
                 <p className="text-red-500">Failed to load emotion data.</p>
               ) : (
-                <EmotionChart 
-                  data={emotionData} 
-                  title="" 
-                  height={250} 
+                <EmotionChart
+                  data={emotionData}
+                  title="Emotional Shifts"
+                  height={250}
                   currentTime={currentTime}
                 />
               )}

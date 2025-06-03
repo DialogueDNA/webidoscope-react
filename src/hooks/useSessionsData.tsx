@@ -57,6 +57,7 @@ export const useSessionSummary = (sessionId: string) => {
       return res ?? { status: 'Error', data: null };
     },
     enabled: !!user && !!sessionId,
+    refetchInterval: false,
   });
 };
 
@@ -71,6 +72,7 @@ export const useSessionTranscript = (sessionId: string) => {
       return res ?? { status: 'Error', data: null };
     },
     enabled: !!user && !!sessionId,
+    refetchInterval: false,
   });
 };
 
@@ -85,6 +87,7 @@ export const useSessionEmotion = (sessionId: string) => {
       return res ?? { status: 'Error', data: null };
     },
     enabled: !!user && !!sessionId,
+    refetchInterval: false,
   });
 };
 
