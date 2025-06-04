@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { marked } from "marked";
 import { useParams, useNavigate } from 'react-router-dom';
@@ -106,11 +107,15 @@ const SessionSummary = () => {
 
   React.useEffect(() => {
     if (resolvedEmotions && Array.isArray(resolvedEmotions) && resolvedEmotions.length > 0) {
+      console.log('🔍 Processing resolved emotions:', resolvedEmotions);
+      
       const emotions = new Set<string>();
       resolvedEmotions.forEach((entry: any) => {
+        console.log('📊 Processing entry:', entry);
         if (entry.emotions && Array.isArray(entry.emotions)) {
           entry.emotions.forEach((emotion: any) => {
             if (emotion.label) {
+              console.log('🎯 Found emotion:', emotion.label);
               emotions.add(emotion.label.toLowerCase());
             }
           });
@@ -118,6 +123,7 @@ const SessionSummary = () => {
       });
       
       const emotionList = Array.from(emotions).sort();
+      console.log('📝 Available emotions:', emotionList);
       setAvailableEmotions(emotionList);
       setSelectedEmotions(emotionList); // Start with all emotions selected
     }
@@ -220,11 +226,18 @@ const SessionSummary = () => {
   };
 
   const generateEmotionChartData = (raw: EmotionRaw[]): { [speaker: string]: ChartPoint[] } => {
-    if (!raw || raw.length === 0) return {};
+    console.log('🔧 Generating emotion chart data from:', raw);
+    
+    if (!raw || raw.length === 0) {
+      console.log('❌ No raw emotion data available');
+      return {};
+    }
 
     const speakerData: { [speaker: string]: ChartPoint[] } = {};
 
-    raw.forEach((entry) => {
+    raw.forEach((entry, index) => {
+      console.log(`📈 Processing entry ${index}:`, entry);
+      
       const speakerKey = entry.speaker || 'Unknown Speaker';
       
       if (!speakerData[speakerKey]) {
@@ -236,12 +249,15 @@ const SessionSummary = () => {
       };
 
       for (const emotion of entry.emotions) {
+        console.log(`🎭 Adding emotion ${emotion.label}: ${emotion.score}`);
         point[emotion.label.toLowerCase()] = parseFloat((emotion.score * 100).toFixed(2));
       }
 
+      console.log('📊 Created chart point:', point);
       speakerData[speakerKey].push(point);
     });
 
+    console.log('✅ Final speaker data:', speakerData);
     return speakerData;
   };
 
@@ -291,6 +307,10 @@ const SessionSummary = () => {
 
   const transcriptMessages = parseTranscript(resolvedTranscript);
   const emotionChartData = generateEmotionChartData(resolvedEmotions);
+  
+  console.log('🎯 Final emotion chart data being passed to component:', emotionChartData);
+  console.log('🎭 Selected emotions:', selectedEmotions);
+  console.log('📊 Available emotions:', availableEmotions);
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
