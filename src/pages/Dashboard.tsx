@@ -12,16 +12,18 @@ const Dashboard = () => {
     { speaker: 'Speaker 1', text: "That's great to hear, keep up the good work!" },
   ];
 
-  // Sample data for the emotion chart - updated to match EmotionChartPoint interface
+  // Sample data for the emotion chart - using end_time to match EmotionChartPoint interface
   const emotionData = [
-    { start_time: '0', confidence: 30 },
-    { start_time: '5', confidence: 40 },
-    { start_time: '10', confidence: 35 },
-    { start_time: '15', confidence: 50 },
-    { start_time: '20', confidence: 45 },
-    { start_time: '25', confidence: 60 },
-    { start_time: '30', confidence: 75 },
+    { end_time: 0, confidence: 30 },
+    { end_time: 5, confidence: 40 },
+    { end_time: 10, confidence: 35 },
+    { end_time: 15, confidence: 50 },
+    { end_time: 20, confidence: 45 },
+    { end_time: 25, confidence: 60 },
+    { end_time: 30, confidence: 75 },
   ];
+
+  console.log('📊 Dashboard emotion data:', emotionData);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col page-transition">
