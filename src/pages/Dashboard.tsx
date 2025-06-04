@@ -12,15 +12,15 @@ const Dashboard = () => {
     { speaker: 'Speaker 1', text: "That's great to hear, keep up the good work!" },
   ];
 
-  // Sample data for the emotion chart
+  // Sample data for the emotion chart - updated to match EmotionChartPoint interface
   const emotionData = [
-    { name: '0min', value: 30 },
-    { name: '5min', value: 40 },
-    { name: '10min', value: 35 },
-    { name: '15min', value: 50 },
-    { name: '20min', value: 45 },
-    { name: '25min', value: 60 },
-    { name: '30min', value: 75 },
+    { start_time: '0', confidence: 30 },
+    { start_time: '5', confidence: 40 },
+    { start_time: '10', confidence: 35 },
+    { start_time: '15', confidence: 50 },
+    { start_time: '20', confidence: 45 },
+    { start_time: '25', confidence: 60 },
+    { start_time: '30', confidence: 75 },
   ];
 
   return (
