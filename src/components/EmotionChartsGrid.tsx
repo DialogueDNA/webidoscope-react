@@ -4,8 +4,8 @@ import EmotionChart from './EmotionChart';
 import { cn } from '@/lib/utils';
 
 interface EmotionChartPoint {
-  start_time: string;
-  [emotionLabel: string]: number | string;
+  end_time: number;
+  [emotionLabel: string]: number;
 }
 
 interface EmotionChartsGridProps {
@@ -35,7 +35,7 @@ const EmotionChartsGrid: React.FC<EmotionChartsGridProps> = ({
   // Filter chart data to only include selected emotions
   const filterChartData = (data: EmotionChartPoint[]): EmotionChartPoint[] => {
     return data.map(point => {
-      const filteredPoint: EmotionChartPoint = { start_time: point.start_time };
+      const filteredPoint: EmotionChartPoint = { end_time: point.end_time };
       
       selectedEmotions.forEach(emotion => {
         if (emotion in point) {
@@ -61,7 +61,7 @@ const EmotionChartsGrid: React.FC<EmotionChartsGridProps> = ({
         <div key={speaker} className="w-full">
           <EmotionChart
             data={filterChartData(chartData[speaker])}
-            title={`${speaker} - Emotional Analysis`}
+            title={`Speaker ${speaker} - Emotional Analysis`}
             height={250}
             currentTime={currentTime}
           />

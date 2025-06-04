@@ -5,8 +5,8 @@ import {
 } from 'recharts';
 
 interface EmotionChartPoint {
-  start_time: string;
-  [emotionLabel: string]: number | string;
+  end_time: number;
+  [emotionLabel: string]: number;
 }
 
 interface EmotionChartProps {
@@ -22,12 +22,13 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
   height = 200,
   currentTime
 }) => {
+  const maxEndTime = Math.max(...data.map(d => d.end_time as number));
   const getCurrentTimePosition = () => {
     if (currentTime === undefined || !data.length) return null;
 
     const timeData = data.map(point => ({
       ...point,
-      timeValue: parseFloat(point.start_time) || 0
+      timeValue: point.end_time || 0
     }));
 
     const closestPoint = timeData.reduce((closest, current) =>
@@ -36,7 +37,7 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
         : closest
     );
 
-    return closestPoint.start_time;
+    return closestPoint.end_time;
   };
 
   const currentTimePosition = getCurrentTimePosition();
@@ -47,14 +48,25 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
       <ResponsiveContainer width="100%" height={height}>
         <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="start_time" tick={{ fontSize: 12 }} stroke="#888" />
+          <XAxis
+            dataKey="end_time"
+            type="number"
+            domain={[0, maxEndTime]}
+            tick={{ fontSize: 12 }}
+            stroke="#888"
+            tickFormatter={(value) => {
+              const mins = Math.floor(value / 60);
+              const secs = Math.floor(value % 60);
+              return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }}
+          />
           <YAxis tick={{ fontSize: 12 }} stroke="#888" />
           <Tooltip />
           <Legend />
 
-          {currentTimePosition && (
+          {currentTime !== undefined && (
             <ReferenceLine
-              x={currentTimePosition}
+              x={currentTime.toFixed(2)} // match the precision
               stroke="#ff6b6b"
               strokeWidth={2}
               strokeDasharray="5 5"
@@ -63,7 +75,7 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
 
           {data.length > 0 &&
             Object.keys(data[0])
-              .filter(key => key !== 'start_time')
+              .filter(key => key !== 'end_time')
               .map((key, i) => (
                 <Line
                   key={key}

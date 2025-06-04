@@ -221,8 +221,8 @@ const SessionSummary = () => {
   };
 
   type ChartPoint = {
-    start_time: string;
-    [emotionLabel: string]: number | string;
+    end_time: number;
+    [emotionLabel: string]: number;
   };
 
   const generateEmotionChartData = (raw: EmotionRaw[]): { [speaker: string]: ChartPoint[] } => {
@@ -245,7 +245,7 @@ const SessionSummary = () => {
       }
 
       const point: ChartPoint = {
-        start_time: entry.start_time.toFixed(2),
+        end_time: Number(entry.end_time.toFixed(2)),
       };
 
       for (const emotion of entry.emotions) {
