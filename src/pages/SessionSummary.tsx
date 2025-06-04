@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { marked } from "marked";
 import { useParams, useNavigate } from 'react-router-dom';
@@ -387,6 +386,7 @@ const SessionSummary = () => {
                 chartData={emotionChartData}
                 currentTime={currentTime}
                 selectedEmotions={selectedEmotions}
+                emotionData={resolvedEmotions}
               />
             </>
           ) : (

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -14,13 +15,15 @@ interface EmotionChartProps {
   title: string;
   height?: number;
   currentTime?: number;
+  isActiveSpeaker?: boolean;
 }
 
 const EmotionChart: React.FC<EmotionChartProps> = ({
   data,
   title,
   height = 200,
-  currentTime
+  currentTime,
+  isActiveSpeaker = false
 }) => {
   const maxEndTime = Math.max(...data.map(d => d.end_time as number));
   const getCurrentTimePosition = () => {
@@ -42,9 +45,37 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
 
   const currentTimePosition = getCurrentTimePosition();
 
+  // Styling based on speaker activity
+  const getLineStyle = (index: number) => {
+    if (isActiveSpeaker) {
+      return {
+        strokeWidth: 3,
+        stroke: `hsl(${(index * 60) % 360}, 80%, 50%)`,
+        opacity: 1
+      };
+    } else {
+      return {
+        strokeWidth: 1.5,
+        stroke: `hsl(${(index * 60) % 360}, 40%, 60%)`,
+        opacity: 0.6
+      };
+    }
+  };
+
+  const chartOpacity = isActiveSpeaker ? 1 : 0.7;
+
   return (
-    <div className="p-6 glass-card rounded-lg card-hover animate-fade-in">
-      <h3 className="text-lg font-medium mb-4">{title}</h3>
+    <div 
+      className={`p-6 glass-card rounded-lg card-hover animate-fade-in transition-all duration-300 ${
+        isActiveSpeaker ? 'ring-2 ring-blue-400 shadow-lg' : ''
+      }`}
+      style={{ opacity: chartOpacity }}
+    >
+      <h3 className={`text-lg font-medium mb-4 transition-all duration-300 ${
+        isActiveSpeaker ? 'text-blue-600 font-semibold' : 'text-gray-600'
+      }`}>
+        {title} {isActiveSpeaker && '🎤'}
+      </h3>
       <ResponsiveContainer width="100%" height={height}>
         <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -66,9 +97,9 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
 
           {currentTime !== undefined && (
             <ReferenceLine
-              x={currentTime.toFixed(2)} // match the precision
-              stroke="#ff6b6b"
-              strokeWidth={2}
+              x={currentTime.toFixed(2)}
+              stroke={isActiveSpeaker ? "#ff4444" : "#ff6b6b"}
+              strokeWidth={isActiveSpeaker ? 3 : 2}
               strokeDasharray="5 5"
             />
           )}
@@ -76,16 +107,20 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
           {data.length > 0 &&
             Object.keys(data[0])
               .filter(key => key !== 'end_time')
-              .map((key, i) => (
-                <Line
-                  key={key}
-                  type="monotone"
-                  dataKey={key}
-                  strokeWidth={2}
-                  stroke={`hsl(${(i * 60) % 360}, 70%, 45%)`}
-                  dot={false}
-                />
-              ))}
+              .map((key, i) => {
+                const lineStyle = getLineStyle(i);
+                return (
+                  <Line
+                    key={key}
+                    type="monotone"
+                    dataKey={key}
+                    strokeWidth={lineStyle.strokeWidth}
+                    stroke={lineStyle.stroke}
+                    opacity={lineStyle.opacity}
+                    dot={false}
+                  />
+                );
+              })}
         </LineChart>
       </ResponsiveContainer>
     </div>

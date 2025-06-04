@@ -13,16 +13,48 @@ interface EmotionChartsGridProps {
   currentTime?: number;
   selectedEmotions: string[];
   className?: string;
+  emotionData?: any[];
 }
 
 const EmotionChartsGrid: React.FC<EmotionChartsGridProps> = ({
   chartData,
   currentTime,
   selectedEmotions,
-  className
+  className,
+  emotionData = []
 }) => {
   const speakers = Object.keys(chartData);
   const speakerCount = speakers.length;
+
+  // Determine which speaker is currently active based on currentTime
+  const getActiveSpeaker = (): string | null => {
+    if (!currentTime || !emotionData || emotionData.length === 0) {
+      return null;
+    }
+
+    console.log('🎯 Determining active speaker for time:', currentTime);
+    console.log('📊 Available emotion data:', emotionData);
+
+    // Find the emotion segment that contains the current time
+    const activeSegment = emotionData.find((segment: any) => {
+      const startTime = segment.start_time || 0;
+      const endTime = segment.end_time || 0;
+      const isActive = currentTime >= startTime && currentTime <= endTime;
+      
+      if (isActive) {
+        console.log('🎤 Found active segment:', segment);
+      }
+      
+      return isActive;
+    });
+
+    const activeSpeaker = activeSegment?.speaker || null;
+    console.log('🔊 Active speaker:', activeSpeaker);
+    
+    return activeSpeaker;
+  };
+
+  const activeSpeaker = getActiveSpeaker();
 
   // Determine grid layout based on speaker count and screen size
   const getGridCols = () => {
@@ -57,16 +89,22 @@ const EmotionChartsGrid: React.FC<EmotionChartsGridProps> = ({
 
   return (
     <div className={cn("grid gap-4", getGridCols(), className)}>
-      {speakers.map((speaker) => (
-        <div key={speaker} className="w-full">
-          <EmotionChart
-            data={filterChartData(chartData[speaker])}
-            title={`Speaker ${speaker} - Emotional Analysis`}
-            height={250}
-            currentTime={currentTime}
-          />
-        </div>
-      ))}
+      {speakers.map((speaker) => {
+        const isActiveSpeaker = activeSpeaker === speaker;
+        console.log(`📈 Speaker ${speaker} is ${isActiveSpeaker ? 'ACTIVE' : 'inactive'}`);
+        
+        return (
+          <div key={speaker} className="w-full">
+            <EmotionChart
+              data={filterChartData(chartData[speaker])}
+              title={`Speaker ${speaker} - Emotional Analysis`}
+              height={250}
+              currentTime={currentTime}
+              isActiveSpeaker={isActiveSpeaker}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 };
