@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 
 interface EmotionChartPoint {
-  start_time: string;
+  end_time: string;
   [emotionLabel: string]: number | string;
 }
 
@@ -27,7 +27,7 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
 
     const timeData = data.map(point => ({
       ...point,
-      timeValue: parseFloat(point.start_time) || 0
+      timeValue: parseFloat(point.end_time) || 0
     }));
 
     const closestPoint = timeData.reduce((closest, current) =>
@@ -36,7 +36,7 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
         : closest
     );
 
-    return closestPoint.start_time;
+    return closestPoint.end_time;
   };
 
   const currentTimePosition = getCurrentTimePosition();
@@ -47,7 +47,7 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
       <ResponsiveContainer width="100%" height={height}>
         <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="start_time" tick={{ fontSize: 12 }} stroke="#888" />
+          <XAxis dataKey="end_time" tick={{ fontSize: 12 }} stroke="#888" />
           <YAxis tick={{ fontSize: 12 }} stroke="#888" />
           <Tooltip />
           <Legend />
@@ -63,7 +63,7 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
 
           {data.length > 0 &&
             Object.keys(data[0])
-              .filter(key => key !== 'start_time')
+              .filter(key => key !== 'end_time')
               .map((key, i) => (
                 <Line
                   key={key}

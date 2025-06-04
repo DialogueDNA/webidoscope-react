@@ -186,6 +186,36 @@ const SessionSummary = () => {
     return [];
   };
 
+  type EmotionBySpeaker = {
+    [speakerId: string]: ChartPoint[];
+  };
+
+  const groupEmotionsBySpeaker = (raw: EmotionRaw[] | null): EmotionBySpeaker => {
+    if (!raw || !Array.isArray(raw)) return {};
+
+    const result: EmotionBySpeaker = {};
+
+    raw.forEach(entry => {
+      const speaker = String(entry.speaker);
+      const point: ChartPoint = {
+        end_time: entry.end_time.toFixed(2)
+      };
+
+      for (const emotion of entry.emotions) {
+        point[emotion.label.toLowerCase()] = parseFloat((emotion.score * 100).toFixed(2));
+      }
+
+      if (!result[speaker]) {
+        result[speaker] = [];
+      }
+
+      result[speaker].push(point);
+    });
+
+    return result;
+  };
+
+
   type EmotionRaw = {
     speaker: string;
     text: string;
@@ -195,7 +225,7 @@ const SessionSummary = () => {
   };
 
   type ChartPoint = {
-    start_time: string;
+    end_time: string;
     [emotionLabel: string]: number | string;
   };
 
@@ -204,7 +234,7 @@ const SessionSummary = () => {
 
     return raw.map((entry) => {
       const point: ChartPoint = {
-        start_time: entry.start_time.toFixed(2), // Use time as X-axis label
+        end_time: entry.end_time.toFixed(2), // Use time as X-axis label
       };
 
       for (const emotion of entry.emotions) {
@@ -247,7 +277,10 @@ const SessionSummary = () => {
 
 
   const transcriptMessages = parseTranscript(resolvedTranscript);
-  const emotionData = generateEmotionChartData(resolvedEmotions);
+  const emotionDataBySpeaker = resolvedEmotions
+  ? groupEmotionsBySpeaker(resolvedEmotions)
+  : {};
+
   console.log('Emotion Data:', emotionResponse?.status);
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
@@ -298,24 +331,39 @@ const SessionSummary = () => {
                 />
               )}
           </div>
-
-          <div className="glass-card rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Emotional Shifts</h2>
-            {emotionResponse?.status === 'not_started' ? (
-                <p className="text-gray-500 italic">Emotion analysis has not started.</p>
-              ) : emotionResponse?.status === 'processing' ? (
-                <p className="text-gray-500 animate-pulse">Analyzing emotions...</p>
-              ) : emotionsError || emotionResponse?.status === 'failed' ? (
-                <p className="text-red-500">Failed to load emotion data.</p>
-              ) : (
+          {emotionResponse?.status === 'not_started' ? (
+            <div className="glass-card rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">Emotional Shifts</h2>
+              <p className="text-gray-500 italic">Emotion analysis has not started.</p>
+            </div>
+          ) : emotionResponse?.status === 'processing' ? (
+            <div className="glass-card rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">Emotional Shifts</h2>
+              <p className="text-gray-500 animate-pulse">Analyzing emotions...</p>
+            </div>
+          ) : emotionsError || emotionResponse?.status === 'failed' ? (
+            <div className="glass-card rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">Emotional Shifts</h2>
+              <p className="text-red-500">Failed to load emotion data.</p>
+            </div>
+          ) : Object.keys(emotionDataBySpeaker).length === 0 ? (
+            <div className="glass-card rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">Emotional Shifts</h2>
+              <p className="text-gray-600">No emotion data available.</p>
+            </div>
+          ) : (
+            Object.entries(emotionDataBySpeaker).map(([speaker, data]) => (
+              <div key={speaker} className="glass-card rounded-lg p-6 mb-8">
+                <h2 className="text-xl font-semibold mb-4">Emotional Shifts – Speaker {speaker}</h2>
                 <EmotionChart
-                  data={emotionData}
-                  title="Emotional Shifts"
+                  data={data}
+                  title={`Emotions of Speaker ${speaker}`}
                   height={250}
                   currentTime={currentTime}
                 />
-              )}
-          </div>
+              </div>
+            ))
+          )}
         </div>
 
         <div className="mb-8">
