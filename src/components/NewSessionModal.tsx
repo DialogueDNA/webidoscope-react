@@ -81,7 +81,7 @@ const NewSessionModal = ({ open, onOpenChange }: NewSessionModalProps) => {
       formData.append("file", selectedFile);
       formData.append("title", sessionTitle.trim());
 
-      const response = await apiClient("/api/sessions/upload", {
+      const response = await apiClient("/api/sessions", {
         method: "POST",
         body: formData,
       });

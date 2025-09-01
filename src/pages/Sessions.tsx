@@ -18,7 +18,7 @@ const Sessions = () => {
   const [showSelection, setShowSelection] = useState(false);
   
   const navigate = useNavigate();
-  const { data: sessions = [], isLoading, error } = useSessionsData();
+  const { data: sessions, isLoading, error } = useSessionsData();
   const deleteSession = useDeleteSession();
   const deleteMultipleSessions = useDeleteMultipleSessions();
 
@@ -33,7 +33,7 @@ const Sessions = () => {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedSessions(sessions.map(session => session.id));
+      setSelectedSessions(sessions.sessions.map(session => session.id));
     } else {
       setSelectedSessions([]);
     }
@@ -73,14 +73,14 @@ const Sessions = () => {
 
   const getDeleteDialogData = () => {
     if (sessionToDelete) {
-      const session = sessions.find(s => s.id === sessionToDelete);
+      const session = sessions.sessions.find(s => s.id === sessionToDelete);
       return {
         count: 1,
         titles: session ? [session.title] : []
       };
     }
     
-    const selectedSessionData = sessions.filter(s => selectedSessions.includes(s.id));
+    const selectedSessionData = sessions.sessions.filter(s => selectedSessions.includes(s.id));
     return {
       count: selectedSessions.length,
       titles: selectedSessionData.map(s => s.title)
@@ -143,7 +143,7 @@ const Sessions = () => {
       <Navbar />
       
       <div className="flex-1 container mx-auto py-8 px-4">
-        {sessions.length === 0 ? (
+        {sessions.sessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-4 animate-fade-in">Welcome to EmotionAI Tool</h1>
@@ -181,11 +181,11 @@ const Sessions = () => {
               <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2">
                   <Checkbox
-                    checked={selectedSessions.length === sessions.length}
+                    checked={selectedSessions.length === sessions.sessions.length}
                     onCheckedChange={handleSelectAll}
                   />
                   <span className="text-sm text-gray-600">
-                    Select All ({selectedSessions.length} of {sessions.length} selected)
+                    Select All ({selectedSessions.length} of {sessions.sessions.length} selected)
                   </span>
                 </div>
                 
@@ -202,7 +202,7 @@ const Sessions = () => {
             )}
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sessions.map((session) => (
+              {sessions.sessions.map((session) => (
                 <SessionCard
                   key={session.id}
                   id={session.id}

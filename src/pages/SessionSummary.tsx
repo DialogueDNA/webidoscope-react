@@ -17,6 +17,8 @@ import {
 } from '@/hooks/useSessionsData';
 import { usePollUntilReady } from '@/hooks/usePollUntilReady';
 import { toast } from '@/hooks/use-toast';
+import {mapEmotions, mapSummary, mapTranscription} from "@/utils/mappers.ts";
+import type {EmotionBundle, Emotions, Summary, Transcript} from "@/types/interfaces.ts";
 
 const SessionSummary = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,11 +35,11 @@ const SessionSummary = () => {
   } = useSessionMetadata(id || '');
 
   const {
-    data: summaryResponse,
-    isLoading: loadingSummary,
-    error: summaryError,
-    refetch: refetchSummary
-  } = useSessionSummary(id || '');
+    data: audioResponse,
+    isLoading: loadingAudio,
+    error: audioError,
+    refetch: refetchAudio
+  } = useSessionAudio(id || '');
 
   const {
     data: transcriptResponse,
@@ -52,73 +54,72 @@ const SessionSummary = () => {
     error: emotionsError,
     refetch: refetchEmotion
   } = useSessionEmotion(id || '');
-
   const {
-    data: audioResponse,
-    isLoading: loadingAudio,
-    error: audioError,
-    refetch: refetchAudio
-  } = useSessionAudio(id || '');
+    data: summaryResponse,
+    isLoading: loadingSummary,
+    error: summaryError,
+    refetch: refetchSummary
+  } = useSessionSummary(id || '');
 
-  usePollUntilReady(metadataResponse?.status, refetchMetadata);
-  usePollUntilReady(summaryResponse?.status, refetchSummary);
-  usePollUntilReady(transcriptResponse?.status, refetchTranscript);
-  usePollUntilReady(emotionResponse?.status, refetchEmotion);
-  usePollUntilReady(audioResponse?.status, refetchAudio);
+  usePollUntilReady(metadataResponse?.session?.session_status, refetchMetadata);
+  usePollUntilReady(audioResponse?.audio?.status, refetchAudio);
+  usePollUntilReady(transcriptResponse?.transcript?.status, refetchTranscript);
+  usePollUntilReady(emotionResponse?.analyzed_emotions?.status, refetchEmotion);
+  usePollUntilReady(summaryResponse?.summary?.status, refetchSummary);
 
-  const [resolvedTranscript, setResolvedTranscript] = React.useState<string | null>(null);
-  const [resolvedSummary, setResolvedSummary] = React.useState<string | null>(null);
-  const [resolvedEmotions, setResolvedEmotions] = React.useState<any | null>(null);
   const [resolvedAudio, setResolvedAudio] = React.useState<string | null>(null);
+  const [resolvedTranscript, setResolvedTranscript] = React.useState<Transcript>([]);
+  const [resolvedEmotions, setResolvedEmotions] = React.useState<Emotions>([]);
+  const [resolvedSummary, setResolvedSummary] = React.useState<Summary>({ text: '' });
 
   React.useEffect(() => {
-    if (audioResponse?.status === 'completed' && audioResponse.data) {
-      setResolvedAudio(audioResponse.data);
+    if (audioResponse?.audio?.status === "completed") {
+      setResolvedAudio(audioResponse?.audio?.result?.access_url);
     }
   }, [audioResponse]);
 
   React.useEffect(() => {
-    if (transcriptResponse?.status === 'completed' && transcriptResponse.data) {
-      fetch(transcriptResponse.data)
-        .then(res => res.text())
-        .then(setResolvedTranscript)
-        .catch(() => setResolvedTranscript(null));
+    if (transcriptResponse?.transcript?.status === 'completed') {
+      fetch(transcriptResponse?.transcript?.result?.access_url)
+        .then(r => r.json())
+        .then(json => setResolvedTranscript(mapTranscription(json)))
+        .catch(() => setResolvedTranscript([]));
     }
   }, [transcriptResponse]);
 
   React.useEffect(() => {
-    if (summaryResponse?.status === 'completed' && summaryResponse.data) {
-      fetch(summaryResponse.data)
-        .then(res => res.text())
-        .then(setResolvedSummary)
-        .catch(() => setResolvedSummary(null));
-    }
-  }, [summaryResponse]);
-
-  React.useEffect(() => {
-    if (emotionResponse?.status === 'completed' && emotionResponse.data) {
-      fetch(emotionResponse.data)
-        .then(res => res.json())
-        .then(setResolvedEmotions)
-        .catch(() => setResolvedEmotions(null));
+    if (emotionResponse?.analyzed_emotions?.status === 'completed') {
+      fetch(emotionResponse?.analyzed_emotions?.result?.access_url)
+        .then(r => r.json())
+        .then(json => setResolvedEmotions(mapEmotions(json)))
+        .catch(() => setResolvedEmotions([]));
     }
   }, [emotionResponse]);
+
+  React.useEffect(() => {
+    if (summaryResponse?.summary?.status === 'completed') {
+      fetch(summaryResponse?.summary?.result?.access_url)
+        .then(r => r.json())
+        .then(json => setResolvedSummary(mapSummary(json)))
+        .catch(() => setResolvedSummary({ text: '' }));
+    }
+  }, [summaryResponse]);
 
   React.useEffect(() => {
     if (resolvedEmotions && Array.isArray(resolvedEmotions) && resolvedEmotions.length > 0) {
       console.log('🔍 Processing resolved emotions:', resolvedEmotions);
       
       const emotions = new Set<string>();
-      resolvedEmotions.forEach((entry: any) => {
-        console.log('📊 Processing entry:', entry);
-        if (entry.emotions && Array.isArray(entry.emotions)) {
-          entry.emotions.forEach((emotion: any) => {
-            if (emotion.label) {
-              console.log('🎯 Found emotion:', emotion.label);
-              emotions.add(emotion.label.toLowerCase());
-            }
-          });
-        }
+      resolvedEmotions.forEach((bundle: EmotionBundle) => {
+        console.log('📊 Processing entry:', bundle);
+        const scores =
+          bundle?.mixed?.scores ??
+          bundle?.audio?.scores ??
+          bundle?.text?.scores ?? {};
+
+        Object.keys(scores).forEach((label) => {
+          emotions.add(label.toLowerCase());
+        });
       });
       
       const emotionList = Array.from(emotions).sort();
@@ -128,7 +129,7 @@ const SessionSummary = () => {
     }
   }, [resolvedEmotions]);
 
-  const metadata = metadataResponse?.data;
+  const metadata = metadataResponse?.session;
 
   const handleBackToSessions = () => navigate('/sessions');
 
@@ -280,7 +281,7 @@ const SessionSummary = () => {
     setSelectedEmotions([]);
   };
 
-  if (loadingMetadata || metadataResponse?.status != 'completed') {
+  if (loadingMetadata || metadataResponse?.session?.session_status !== 'completed') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <Navbar />
@@ -289,7 +290,7 @@ const SessionSummary = () => {
     );
   }
 
-  if (metadataError || metadataResponse?.status != 'completed' || !metadata) {
+  if (metadataError || metadataResponse?.session?.session_status !== 'completed' || !metadata) {
     return (
       <div className="min-h-screen bg-gray-100 flex flex-col">
         <Navbar />
@@ -303,11 +304,8 @@ const SessionSummary = () => {
       </div>
     );
   }
-
-  const transcriptMessages = parseTranscript(resolvedTranscript);
-  const emotionChartData = generateEmotionChartData(resolvedEmotions);
   
-  console.log('🎯 Final emotion chart data being passed to component:', emotionChartData);
+  console.log('🎯 Final emotion chart data being passed to component:', resolvedEmotions);
   console.log('🎭 Selected emotions:', selectedEmotions);
   console.log('📊 Available emotions:', availableEmotions);
   
@@ -331,16 +329,16 @@ const SessionSummary = () => {
         {/* Audio Section - Always visible and not collapsible */}
         <div className="glass-card rounded-lg p-6 animate-fade-in">
           <h2 className="text-xl font-semibold mb-4">Audio Playback</h2>
-          {audioResponse?.status === 'not_started' && (
+          {audioResponse?.audio?.status === 'not_started' && (
             <p className="text-gray-500 italic">Audio has not been uploaded yet.</p>
           )}
-          {audioResponse?.status === 'processing' && (
+          {audioResponse?.audio?.status === 'processing' && (
             <p className="text-gray-500 animate-pulse">Audio is still being processed...</p>
           )}
-          {(audioError || audioResponse?.status === 'failed') && (
+          {(audioError || audioResponse?.audio?.status === 'failed') && (
             <p className="text-red-500">Failed to load audio file.</p>
           )}
-          {audioResponse?.status === 'completed' && resolvedAudio && (
+          {audioResponse?.audio?.status === 'completed' && resolvedAudio && (
             <AudioPlayer
               audioUrl={resolvedAudio}
               duration={metadata.duration || undefined}
@@ -351,27 +349,27 @@ const SessionSummary = () => {
 
         {/* Session Summary */}
         <CollapsibleSection title="Session Summary" defaultExpanded={true}>
-          {summaryResponse?.status === 'not_started' ? (
+          {summaryResponse?.summary?.status === 'not_started' ? (
             <p className="text-gray-500 italic">Summary has not been generated yet.</p>
-          ) : summaryResponse?.status === 'processing' ? (
+          ) : summaryResponse?.summary?.status === 'processing' ? (
             <p className="text-gray-500 animate-pulse">Summary is still being generated...</p>
-          ) : summaryError || summaryResponse?.status === 'failed' ? (
+          ) : summaryError || summaryResponse?.summary?.status === 'failed' ? (
             <p className="text-red-500">Failed to load summary.</p>
           ) : (
             <div
               className="prose prose-gray max-w-none leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(resolvedSummary || "") }}
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(resolvedSummary?.text || "") }}
             />
           )}
         </CollapsibleSection>
 
         {/* Emotion Analysis */}
         <CollapsibleSection title="Emotional Analysis" defaultExpanded={true}>
-          {emotionResponse?.status === 'not_started' ? (
+          {emotionResponse?.analyzed_emotions?.status === 'not_started' ? (
             <p className="text-gray-500 italic">Emotion analysis has not started.</p>
-          ) : emotionResponse?.status === 'processing' ? (
+          ) : emotionResponse?.analyzed_emotions?.status === 'processing' ? (
             <p className="text-gray-500 animate-pulse">Analyzing emotions...</p>
-          ) : emotionsError || emotionResponse?.status === 'failed' ? (
+          ) : emotionsError || emotionResponse.analyzed_emotions?.status === 'failed' ? (
             <p className="text-red-500">Failed to load emotion data.</p>
           ) : availableEmotions.length > 0 ? (
             <>
@@ -383,7 +381,6 @@ const SessionSummary = () => {
                 onDeselectAll={handleDeselectAllEmotions}
               />
               <EmotionChartsGrid
-                chartData={emotionChartData}
                 currentTime={currentTime}
                 selectedEmotions={selectedEmotions}
                 emotionData={resolvedEmotions}
@@ -396,16 +393,16 @@ const SessionSummary = () => {
 
         {/* Transcript */}
         <CollapsibleSection title="Transcript" defaultExpanded={true}>
-          {transcriptResponse?.status === 'not_started' ? (
+          {transcriptResponse?.transcript?.status === 'not_started' ? (
             <p className="text-gray-500 italic">Transcription has not started yet.</p>
-          ) : transcriptResponse?.status === 'processing' ? (
+          ) : transcriptResponse?.transcript?.status === 'processing' ? (
             <p className="text-gray-500 animate-pulse">Transcribing audio...</p>
-          ) : transcriptError || transcriptResponse?.status === 'failed' ? (
+          ) : transcriptError || transcriptResponse?.transcript?.status === 'failed' ? (
             <p className="text-red-500">Could not load transcript.</p>
-          ) : transcriptMessages.length > 0 ? (
-            <TranscriptionCard 
-              messages={transcriptMessages} 
-              title="" 
+          ) : resolvedTranscript.length > 0 ? (
+            <TranscriptionCard
+              segments={resolvedTranscript}
+              title=""
               currentTime={currentTime}
             />
           ) : (
@@ -418,15 +415,15 @@ const SessionSummary = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <h3 className="text-sm text-gray-500 mb-1">Date</h3>
-              <p className="font-medium">{formatDate(metadata.created_at)}</p>
+              <p className="font-medium">{formatDate(metadata?.created_at)}</p>
             </div>
             <div>
               <h3 className="text-sm text-gray-500 mb-1">Duration</h3>
-              <p className="font-medium">{formatDuration(metadata.duration)}</p>
+              <p className="font-medium">{formatDuration(metadata?.duration)}</p>
             </div>
             <div>
               <h3 className="text-sm text-gray-500 mb-1">Participants</h3>
-              <p className="font-medium">{metadata.participants?.join(', ') || 'No participants listed'}</p>
+              <p className="font-medium">{metadata?.participants?.join(', ') || 'No participants listed'}</p>
             </div>
           </div>
         </CollapsibleSection>

@@ -4,11 +4,13 @@ export const apiClient = async (
   path: string,
   options: RequestInit = {}
 ): Promise<any> => {
+
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const token = session?.access_token;
+  const token = session?.access_token
+  console.log(token)
   const isFormData = options.body instanceof FormData;
 
   const headers = {
@@ -34,7 +36,7 @@ export const apiClient = async (
     }
 
   throw new Error(errorMessage);
-}
+  }
 
   return res.json();
 };

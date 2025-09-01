@@ -10,7 +10,6 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 
 import Index from "./pages/Index";
 import SignUp from "./pages/SignUp";
-import Dashboard from "./pages/Dashboard";
 import Sessions from "./pages/Sessions";
 import SessionSummary from "./pages/SessionSummary";
 import Settings from "./pages/Settings";
