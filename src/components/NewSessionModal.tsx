@@ -144,7 +144,7 @@ const NewSessionModal: React.FC<NewSessionModalProps> = ({ open, onOpenChange })
           <div className="space-y-2">
             <Label htmlFor="audio-file">Upload Audio File</Label>
             <div className="flex items-center gap-2">
-              <Input id="audio-file" type="file" accept="audio/*" onChange={handleFileChange} />
+              <Input id="audio-file" type="file" accept="audio/*,.mpeg" onChange={handleFileChange} />
               <Upload className="h-4 w-4 text-muted-foreground" />
             </div>
             {selectedFile && (
