@@ -172,7 +172,7 @@ const SessionSummary: React.FC = () => {
   React.useEffect(() => {
     if (!id) return;
     if (transcriptResponse?.status === 'completed') {
-      apiClient(`/api/sessions/${id}/speakers`)
+      apiClient(`/api/sessions/speakers/${id}`)
         .then((res) => setSpeakerMap(res?.map ?? {}))
         .catch(() => setSpeakerMap({}));
     }
@@ -260,7 +260,7 @@ const SessionSummary: React.FC = () => {
     if (!id) return;
     setOpenNameDialog(true);
     try {
-      const res = await apiClient(`/api/sessions/${id}/speakers`);
+      const res = await apiClient(`/api/sessions/speakers/${id}`);
       setDetectedSpeakers(res?.detected ?? []);
       setSamples(res?.samples ?? {});
       const base: Record<string, string> = {};
@@ -275,12 +275,13 @@ const SessionSummary: React.FC = () => {
     if (!id) return;
     setSavingNames(true);
     try {
-      await apiClient(`/api/sessions/${id}/speakers`, {
+      await apiClient(`/api/sessions/speakers/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ map: editingMap }),
       });
       setSpeakerMap(editingMap);
+      await refetchMetadata();
       setOpenNameDialog(false);
       toast({ title: 'Saved', description: 'Speaker names saved' });
 
