@@ -5,16 +5,18 @@
  * - Fetch & display session metadata, audio, transcript, emotions and summary.
  * - Show progress states via usePollUntilReady until each artifact is ready.
  * - Render the summary (Markdown), transcript, and emotion charts.
- * - Provide a "Change summary type" dialog that allows on-demand re-generation
- *   via POST /api/sessions/summary/:id/generate, then refetches the summary.
+ * - Provide:
+ *    1) "Change summary type" dialog → POST /api/sessions/summary/:id/generate.
+ *    2) "Name speakers" dialog → GET/PUT /api/sessions/:id/speakers.
+ *       Applies custom speaker names across Transcript & Emotion charts.
  *
  * Notes:
- * - Assumes the backend exposes:
+ * - Assumes backend exposes:
  *     GET  /api/sessions/summary/presets
- *     POST /api/sessions/summary/:id/generate  (body: { preset: "<key>" })
+ *     POST /api/sessions/summary/:id/generate   (body: { preset: "<key>" })
+ *     GET  /api/sessions/:id/speakers
+ *     PUT  /api/sessions/:id/speakers           (body: { map: { "1": "Amal", ... } })
  *     GET  /api/summary/:id/download            (PDF download; keep as in your backend)
- * - This component expects the hooks from '@/hooks/useSessionsData' and
- *   a working apiClient at '@/lib/apiClient'.
  */
 
 import React from 'react';
@@ -59,6 +61,14 @@ const SessionSummary: React.FC = () => {
   const [dialogPreset, setDialogPreset] = React.useState<string>('');
   const [loadingDialogPresets, setLoadingDialogPresets] = React.useState(false);
   const [submittingOverride, setSubmittingOverride] = React.useState(false);
+
+  // Speaker naming state
+  const [speakerMap, setSpeakerMap] = React.useState<Record<string, string>>({});
+  const [openNameDialog, setOpenNameDialog] = React.useState(false);
+  const [detectedSpeakers, setDetectedSpeakers] = React.useState<string[]>([]);
+  const [samples, setSamples] = React.useState<Record<string, string>>({});
+  const [editingMap, setEditingMap] = React.useState<Record<string, string>>({});
+  const [savingNames, setSavingNames] = React.useState(false);
 
   // ---------- Data hooks ----------
   const {
@@ -158,7 +168,30 @@ const SessionSummary: React.FC = () => {
     }
   }, [resolvedEmotions]);
 
+  // Load speaker map once transcript is ready
+  React.useEffect(() => {
+    if (!id) return;
+    if (transcriptResponse?.status === 'completed') {
+      apiClient(`/api/sessions/speakers/${id}`)
+        .then((res) => setSpeakerMap(res?.map ?? {}))
+        .catch(() => setSpeakerMap({}));
+    }
+  }, [id, transcriptResponse?.status]);
+
   const metadata = metadataResponse?.data;
+
+  // ---------- Helpers ----------
+  const applySpeakerName = (spk: any) => {
+    const key = String(spk ?? '');
+    const custom = speakerMap[key];
+    if (custom && custom.trim()) return custom.trim();
+    return typeof spk === 'number' ? `Speaker ${spk}` : String(spk || 'Unknown');
+  };
+
+  const truncate = (t?: string, n: number = 120) => {
+    if (!t) return '';
+    return t.length > n ? `${t.slice(0, n)}…` : t;
+  };
 
   // ---------- UI handlers ----------
   const handleBackToSessions = () => navigate('/sessions');
@@ -166,7 +199,6 @@ const SessionSummary: React.FC = () => {
   const handleDownloadPDF = async () => {
     if (!resolvedSummary || !metadata) return;
     try {
-      // Keep the path as your backend exposes it
       const response = await fetch(`/api/summary/${metadata.id}/download`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/pdf' },
@@ -223,6 +255,47 @@ const SessionSummary: React.FC = () => {
     }
   };
 
+  // Speaker naming dialog handlers
+  const openNameSpeakers = async () => {
+    if (!id) return;
+    setOpenNameDialog(true);
+    try {
+      const res = await apiClient(`/api/sessions/speakers/${id}`);
+      setDetectedSpeakers(res?.detected ?? []);
+      setSamples(res?.samples ?? {});
+      const base: Record<string, string> = {};
+      (res?.detected ?? []).forEach((k: string) => (base[k] = (res?.map ?? {})[k] || ''));
+      setEditingMap(base);
+    } catch {
+      toast({ title: 'Error', description: 'Failed to load speakers', variant: 'destructive' });
+    }
+  };
+
+  const saveNames = async () => {
+    if (!id) return;
+    setSavingNames(true);
+    try {
+      await apiClient(`/api/sessions/speakers/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ map: editingMap }),
+      });
+      setSpeakerMap(editingMap);
+      await refetchMetadata();
+      setOpenNameDialog(false);
+      toast({ title: 'Saved', description: 'Speaker names saved' });
+
+      // Optional: suggest regenerating summary to apply names inside the text
+      if (summaryResponse?.status === 'completed') {
+        toast({ title: 'Tip', description: 'Names updated. Regenerate the summary to apply.' });
+      }
+    } catch (e: any) {
+      toast({ title: 'Failed', description: e?.message ?? 'Could not save speakers', variant: 'destructive' });
+    } finally {
+      setSavingNames(false);
+    }
+  };
+
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -251,7 +324,7 @@ const SessionSummary: React.FC = () => {
         return parsed
           .filter((entry) => entry.speaker !== undefined && entry.text !== undefined)
           .map((entry) => ({
-            speaker: typeof entry.speaker === 'number' ? `Speaker ${entry.speaker}` : String(entry.speaker),
+            speaker: applySpeakerName(entry.speaker),
             text: entry.text,
           }));
       }
@@ -262,7 +335,7 @@ const SessionSummary: React.FC = () => {
   };
 
   type EmotionRaw = {
-    speaker: string;
+    speaker: string | number;
     text: string;
     start_time: number;
     end_time: number;
@@ -278,7 +351,7 @@ const SessionSummary: React.FC = () => {
     if (!raw || raw.length === 0) return {};
     const speakerData: { [speaker: string]: ChartPoint[] } = {};
     raw.forEach((entry) => {
-      const speakerKey = entry.speaker || 'Unknown Speaker';
+      const speakerKey = applySpeakerName(entry.speaker);
       if (!speakerData[speakerKey]) speakerData[speakerKey] = [];
       const point: ChartPoint = { end_time: Number(entry.end_time?.toFixed?.(2) ?? entry.end_time) };
       for (const emotion of entry.emotions || []) {
@@ -335,6 +408,9 @@ const SessionSummary: React.FC = () => {
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">{metadata.title}</h1>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={openNameSpeakers}>
+                Name speakers
+              </Button>
               <Button variant="outline" onClick={() => onOpenChangeDialog(true)}>
                 Change summary type
               </Button>
@@ -400,7 +476,7 @@ const SessionSummary: React.FC = () => {
                   selectedEmotions={selectedEmotions}
                   onEmotionToggle={handleEmotionToggle}
                   onSelectAll={handleSelectAllEmotions}
-                  onDeselectAll={handleDeselectAllEmotions}
+                  onDeselectAllEmotions={handleDeselectAllEmotions}
                 />
                 <EmotionChartsGrid
                   chartData={emotionChartData}
@@ -481,6 +557,44 @@ const SessionSummary: React.FC = () => {
             </Button>
             <Button onClick={onGenerateOverride} disabled={!dialogPreset || submittingOverride}>
               {submittingOverride ? 'Generating…' : 'Generate'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Name speakers dialog */}
+      <Dialog open={openNameDialog} onOpenChange={setOpenNameDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Name speakers</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {detectedSpeakers.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No speakers detected yet.</p>
+            ) : (
+              detectedSpeakers.map((k) => (
+                <div key={k} className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                  <div className="text-sm font-medium">Speaker {k}</div>
+                  <input
+                    className="border rounded-md p-2 md:col-span-1"
+                    value={editingMap[k] ?? ''}
+                    onChange={(e) => setEditingMap({ ...editingMap, [k]: e.target.value })}
+                    placeholder="Enter name (e.g., Amal)"
+                    maxLength={32}
+                  />
+                  <div className="text-xs text-muted-foreground md:col-span-1 truncate">
+                    {truncate(samples[k])}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <DialogFooter className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setOpenNameDialog(false)} disabled={savingNames}>
+              Cancel
+            </Button>
+            <Button onClick={saveNames} disabled={savingNames}>
+              {savingNames ? 'Saving…' : 'Save'}
             </Button>
           </DialogFooter>
         </DialogContent>
