@@ -471,13 +471,13 @@ const SessionSummary: React.FC = () => {
               <p className="text-red-500">Failed to load emotion data.</p>
             ) : availableEmotions.length > 0 ? (
               <>
-                <EmotionFilter
-                  availableEmotions={availableEmotions}
-                  selectedEmotions={selectedEmotions}
-                  onEmotionToggle={handleEmotionToggle}
-                  onSelectAll={handleSelectAllEmotions}
-                  onDeselectAllEmotions={handleDeselectAllEmotions}
-                />
+              <EmotionFilter
+                availableEmotions={availableEmotions}
+                selectedEmotions={selectedEmotions}
+                onEmotionToggle={handleEmotionToggle}
+                onSelectAll={handleSelectAllEmotions}
+                onDeselectAll={handleDeselectAllEmotions}
+              />
                 <EmotionChartsGrid
                   chartData={emotionChartData}
                   currentTime={currentTime}
@@ -499,7 +499,7 @@ const SessionSummary: React.FC = () => {
             ) : transcriptError || transcriptResponse?.status === 'failed' ? (
               <p className="text-red-500">Could not load transcript.</p>
             ) : transcriptMessages.length > 0 ? (
-              <TranscriptionCard messages={transcriptMessages} title="" currentTime={currentTime} />
+              <TranscriptionCard messages={transcriptMessages} title="" currentTime={currentTime} emotionData={resolvedEmotions} />
             ) : (
               <p className="text-gray-600">No transcript available.</p>
             )}
