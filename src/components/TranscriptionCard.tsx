@@ -10,6 +10,8 @@ interface MessageProps {
   isHighlighted?: boolean;
   emotionData?: EmotionEntry[];
   currentTime?: number;
+  start_time?: number;
+  end_time?: number;
 }
 
 const Message: React.FC<MessageProps> = ({
@@ -18,12 +20,26 @@ const Message: React.FC<MessageProps> = ({
   index,
   isHighlighted = false,
   emotionData,
-  currentTime
+  currentTime,
+  start_time,
+  end_time
 }) => {
   const dominantEmotion = getDominantEmotion(emotionData || [], speaker, currentTime || 0);
+  const messageRef = React.useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to highlighted message
+  React.useEffect(() => {
+    if (isHighlighted && messageRef.current) {
+      messageRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  }, [isHighlighted]);
 
   return (
     <div
+      ref={messageRef}
       className={cn(
         "p-4 rounded-lg mb-3 animate-slide-in transition-all duration-300",
         isHighlighted
@@ -56,6 +72,8 @@ interface TranscriptionCardProps {
   messages: {
     speaker: string;
     text: string;
+    start_time?: number;
+    end_time?: number;
   }[];
   title: string;
   currentTime?: number;
@@ -68,12 +86,31 @@ const TranscriptionCard: React.FC<TranscriptionCardProps> = ({
   currentTime,
   emotionData
 }) => {
-  // TODO: אם יש לך timestamps אמיתיים לכל שורה – החליפי בזה.
   const getCurrentMessageIndex = () => {
     if (currentTime === undefined || !messages.length) return -1;
-    const estimatedDurationPerMessage = 30; // שניות לשורה (הערכה גסה)
-    const currentMessageIndex = Math.floor((currentTime as number) / estimatedDurationPerMessage);
-    return Math.min(currentMessageIndex, messages.length - 1);
+    
+    // Find the message that should be active based on actual timestamps
+    for (let i = 0; i < messages.length; i++) {
+      const message = messages[i];
+      
+      // If message has timestamps, use them for precise timing
+      if (message.start_time !== undefined && message.end_time !== undefined) {
+        if (currentTime >= message.start_time && currentTime <= message.end_time) {
+          return i;
+        }
+      }
+    }
+    
+    // If no message is currently active, find the last message that has ended
+    let lastEndedIndex = -1;
+    for (let i = 0; i < messages.length; i++) {
+      const message = messages[i];
+      if (message.end_time !== undefined && currentTime > message.end_time) {
+        lastEndedIndex = i;
+      }
+    }
+    
+    return lastEndedIndex;
   };
 
   const currentMessageIndex = getCurrentMessageIndex();
@@ -94,6 +131,8 @@ const TranscriptionCard: React.FC<TranscriptionCardProps> = ({
             isHighlighted={index === currentMessageIndex}
             emotionData={emotionData}
             currentTime={currentTime}
+            start_time={message.start_time}
+            end_time={message.end_time}
           />
         ))}
       </div>

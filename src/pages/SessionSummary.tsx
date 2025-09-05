@@ -314,7 +314,12 @@ const SessionSummary: React.FC = () => {
 
   const renderMarkdown = (markdown: string) => marked.parse(markdown);
 
-  type TranscriptEntry = { speaker: string; text: string };
+  type TranscriptEntry = { 
+    speaker: string; 
+    text: string;
+    start_time?: number;
+    end_time?: number;
+  };
 
   const parseTranscript = (json: string | null): TranscriptEntry[] => {
     if (!json) return [];
@@ -326,6 +331,8 @@ const SessionSummary: React.FC = () => {
           .map((entry) => ({
             speaker: applySpeakerName(entry.speaker),
             text: entry.text,
+            start_time: entry.start_time,
+            end_time: entry.end_time,
           }));
       }
     } catch (error) {
