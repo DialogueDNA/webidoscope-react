@@ -1,69 +1,72 @@
 
+@import './styles/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    /* Creative Classic Theme Colors */
+    --background: 249 247 242; /* off-white parchment */
+    --foreground: 15 23 42;    /* ink */
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card: 249 247 242;
+    --card-foreground: 15 23 42;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover: 249 247 242;
+    --popover-foreground: 15 23 42;
 
-    --primary: 0 0% 10%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 201 162 39;      /* gold */
+    --primary-foreground: 15 23 42;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 233 230 223;   /* neutral-200 */
+    --secondary-foreground: 15 23 42;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 233 230 223;
+    --muted-foreground: 100 116 139;
 
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 10%;
+    --accent: 201 162 39;       /* gold accent */
+    --accent-foreground: 15 23 42;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 198 40 40;   /* danger */
+    --destructive-foreground: 249 247 242;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 70%;
+    --border: 233 230 223;      /* neutral-200 */
+    --input: 233 230 223;
+    --ring: 201 162 39;         /* gold ring */
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;          /* rounded-xl base */
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 15 23 42;
+    --foreground: 248 250 252;
 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 15 23 42;
+    --card-foreground: 248 250 252;
 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 15 23 42;
+    --popover-foreground: 248 250 252;
 
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
+    --primary: 201 162 39;      /* keep gold in dark */
+    --primary-foreground: 15 23 42;
 
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 30 41 59;
+    --secondary-foreground: 248 250 252;
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 30 41 59;
+    --muted-foreground: 148 163 184;
 
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 201 162 39;
+    --accent-foreground: 15 23 42;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 220 38 38;
+    --destructive-foreground: 248 250 252;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --border: 30 41 59;
+    --input: 30 41 59;
+    --ring: 201 162 39;
   }
 }
 
@@ -75,10 +78,22 @@
   html, body {
     @apply antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: var(--font-body);
+    line-height: 1.6;
   }
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 500;
+    line-height: 1.2;
+  }
+
+  code, pre {
+    font-family: var(--font-mono);
   }
 }
 

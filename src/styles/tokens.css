@@ -1,0 +1,70 @@
+/* Creative Classic Design Tokens */
+
+:root {
+  /* Brand Colors */
+  --color-ink: #0f172a;
+  --color-gold: #C9A227;
+  --color-bg: #F9F7F2;        /* off-white parchment */
+  --color-neutral-200: #E9E6DF;
+  --color-neutral-300: #D8D5CD;
+  --color-success: #2E7D32;
+  --color-danger: #C62828;
+  --color-info: #1D4ED8;
+
+  /* Transcript Highlighting */
+  --color-highlight-from: #FFF8D7;
+  --color-highlight-to: #FFF1B8;
+  --color-highlight-border: var(--color-gold);
+  --color-highlight-shadow: rgba(201, 162, 39, 0.15);
+
+  /* Shadows */
+  --shadow-soft: 0 6px 24px rgba(15, 23, 42, 0.06);
+  --shadow-highlight: 0 8px 28px var(--color-highlight-shadow);
+  --shadow-card: 0 4px 16px rgba(15, 23, 42, 0.04);
+
+  /* Radiuses */
+  --radius-card: 1rem;      /* rounded-2xl */
+  --radius-input: 0.75rem;  /* rounded-xl */
+  --radius-button: 0.75rem; /* rounded-xl */
+
+  /* Typography Scale */
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Spacing Scale */
+  --space-rhythm: 1.5rem; /* space-y-6 */
+}
+
+.dark {
+  --color-bg: #0f172a;
+  --color-neutral-200: #1e293b;
+  --color-neutral-300: #334155;
+  --color-highlight-from: rgba(255, 248, 215, 0.1);
+  --color-highlight-to: rgba(255, 241, 184, 0.1);
+  --shadow-soft: 0 6px 24px rgba(0, 0, 0, 0.2);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Utility Classes */
+.creative-gradient-highlight {
+  background: linear-gradient(135deg, var(--color-highlight-from), var(--color-highlight-to), var(--color-highlight-from));
+  border: 1px solid var(--color-highlight-border);
+  box-shadow: var(--shadow-highlight);
+}
+
+.creative-focus-ring {
+  @apply focus-visible:ring-2 focus-visible:ring-offset-2;
+  --tw-ring-color: var(--color-gold);
+}
+
+.creative-card {
+  background-color: var(--color-bg);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--color-neutral-200);
+}
+
+.creative-section-accent {
+  border-top: 3px solid var(--color-gold);
+}

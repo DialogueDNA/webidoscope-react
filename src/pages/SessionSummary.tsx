@@ -22,8 +22,10 @@
 import React from 'react';
 import { marked } from 'marked';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 import Navbar from '@/components/Navbar';
+import SectionCard from '@/components/SectionCard';
 import EmotionChartsGrid from '@/components/EmotionChartsGrid';
 import TranscriptionCard from '@/components/TranscriptionCard';
 import AudioPlayer from '@/components/AudioPlayer';
@@ -381,23 +383,47 @@ const SessionSummary: React.FC = () => {
   // ---------- Loading & error states ----------
   if (loadingMetadata || metadataResponse?.status !== 'completed') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-black" />
+        <div className="flex-1 flex items-center justify-center py-20">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center"
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"
+            />
+            <p className="text-muted-foreground font-medium">Loading session...</p>
+          </motion.div>
+        </div>
       </div>
     );
   }
 
   if (metadataError || metadataResponse?.status !== 'completed' || !metadata) {
     return (
-      <div className="min-h-screen bg-gray-100 flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-red-600 mb-2">Session not found</h2>
-            <p className="text-gray-600 mb-4">The session doesn't exist or you don't have access.</p>
-            <Button onClick={handleBackToSessions}>Back to Sessions</Button>
-          </div>
+        <div className="flex-1 flex items-center justify-center py-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center"
+          >
+            <div className="creative-card p-8 max-w-md">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-destructive/10 flex items-center justify-center">
+                <span className="text-2xl text-destructive">⚠️</span>
+              </div>
+              <h2 className="font-heading text-xl font-medium text-foreground mb-2">Session not found</h2>
+              <p className="text-muted-foreground mb-6">The session doesn't exist or you don't have access.</p>
+              <Button onClick={handleBackToSessions} className="creative-focus-ring">
+                Back to Sessions
+              </Button>
+            </div>
+          </motion.div>
         </div>
       </div>
     );
@@ -408,127 +434,187 @@ const SessionSummary: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex-1 container mx-auto py-6 px-4 space-y-6">
+        <div className="container mx-auto py-8 px-4 max-w-7xl space-y-8">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">{metadata.title}</h1>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={openNameSpeakers}>
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+          >
+            <h1 className="font-heading text-3xl lg:text-4xl font-medium text-foreground">
+              {metadata.title}
+            </h1>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="outline" onClick={openNameSpeakers} className="creative-focus-ring">
                 Name speakers
               </Button>
-              <Button variant="outline" onClick={() => onOpenChangeDialog(true)}>
+              <Button variant="outline" onClick={() => onOpenChangeDialog(true)} className="creative-focus-ring">
                 Change summary type
               </Button>
-              <Button onClick={handleDownloadPDF} className="bg-black text-white hover:bg-black/90 flex items-center gap-2">
+              <Button onClick={handleDownloadPDF} className="creative-focus-ring flex items-center gap-2">
                 <Download size={16} />
                 Download PDF
               </Button>
-              <Button onClick={handleBackToSessions} variant="outline">
+              <Button onClick={handleBackToSessions} variant="outline" className="creative-focus-ring">
                 Back to Sessions
               </Button>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Audio Section - Always visible and not collapsible */}
-          <div className="glass-card rounded-lg p-6 animate-fade-in">
-            <h2 className="text-xl font-semibold mb-4">Audio Playback</h2>
-            {audioResponse?.status === 'not_started' && (
-              <p className="text-gray-500 italic">Audio has not been uploaded yet.</p>
-            )}
-            {audioResponse?.status === 'processing' && (
-              <p className="text-gray-500 animate-pulse">Audio is still being processed...</p>
-            )}
-            {(audioError || audioResponse?.status === 'failed') && (
-              <p className="text-red-500">Failed to load audio file.</p>
-            )}
-            {audioResponse?.status === 'completed' && resolvedAudio && (
-              <AudioPlayer
-                audioUrl={resolvedAudio}
-                duration={metadata.duration || undefined}
-                onTimeUpdate={handleTimeUpdate}
-              />
-            )}
-          </div>
+          {/* Audio Section */}
+          <SectionCard accent title="Audio Playback">
+            <div className="p-6">
+              {audioResponse?.status === 'not_started' && (
+                <p className="text-muted-foreground italic">Audio has not been uploaded yet.</p>
+              )}
+              {audioResponse?.status === 'processing' && (
+                <motion.p 
+                  animate={{ opacity: [1, 0.5, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="text-muted-foreground"
+                >
+                  Audio is still being processed...
+                </motion.p>
+              )}
+              {(audioError || audioResponse?.status === 'failed') && (
+                <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive">
+                  Failed to load audio file.
+                </div>
+              )}
+              {audioResponse?.status === 'completed' && resolvedAudio && (
+                <AudioPlayer
+                  audioUrl={resolvedAudio}
+                  duration={metadata.duration || undefined}
+                  onTimeUpdate={handleTimeUpdate}
+                />
+              )}
+            </div>
+          </SectionCard>
 
           {/* Session Summary */}
-          <CollapsibleSection title="Session Summary" defaultExpanded={true}>
-            {summaryResponse?.status === 'not_started' ? (
-              <p className="text-gray-500 italic">Summary has not been generated yet.</p>
-            ) : summaryResponse?.status === 'processing' ? (
-              <p className="text-gray-500 animate-pulse">Summary is still being generated...</p>
-            ) : summaryError || summaryResponse?.status === 'failed' ? (
-              <p className="text-red-500">Failed to load summary.</p>
-            ) : (
-              <div
-                className="prose prose-gray max-w-none leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(resolvedSummary || '') }}
-              />
-            )}
-          </CollapsibleSection>
-
-          {/* Emotion Analysis */}
-          <CollapsibleSection title="Emotional Analysis" defaultExpanded={true}>
-            {emotionResponse?.status === 'not_started' ? (
-              <p className="text-gray-500 italic">Emotion analysis has not started.</p>
-            ) : emotionResponse?.status === 'processing' ? (
-              <p className="text-gray-500 animate-pulse">Analyzing emotions...</p>
-            ) : emotionsError || emotionResponse?.status === 'failed' ? (
-              <p className="text-red-500">Failed to load emotion data.</p>
-            ) : availableEmotions.length > 0 ? (
-              <>
-              <EmotionFilter
-                availableEmotions={availableEmotions}
-                selectedEmotions={selectedEmotions}
-                onEmotionToggle={handleEmotionToggle}
-                onSelectAll={handleSelectAllEmotions}
-                onDeselectAll={handleDeselectAllEmotions}
-              />
-                <EmotionChartsGrid
-                  chartData={emotionChartData}
-                  currentTime={currentTime}
-                  selectedEmotions={selectedEmotions}
-                  emotionData={resolvedEmotions}
+          <SectionCard accent title="Session Summary">
+            <div className="p-6">
+              {summaryResponse?.status === 'not_started' ? (
+                <p className="text-muted-foreground italic">Summary has not been generated yet.</p>
+              ) : summaryResponse?.status === 'processing' ? (
+                <motion.p 
+                  animate={{ opacity: [1, 0.5, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="text-muted-foreground"
+                >
+                  Summary is still being generated...
+                </motion.p>
+              ) : summaryError || summaryResponse?.status === 'failed' ? (
+                <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive">
+                  Failed to load summary.
+                </div>
+              ) : (
+                <div
+                  className="prose prose-lg max-w-none leading-relaxed text-foreground"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(resolvedSummary || '') }}
                 />
-              </>
-            ) : (
-              <p className="text-gray-600">No emotion data available.</p>
-            )}
-          </CollapsibleSection>
+              )}
+            </div>
+          </SectionCard>
+
+          {/* Emotional Analysis */}
+          <SectionCard accent title="Emotional Analysis">
+            <div className="p-6">
+              {emotionResponse?.status === 'not_started' ? (
+                <p className="text-muted-foreground italic">Emotion analysis has not started.</p>
+              ) : emotionResponse?.status === 'processing' ? (
+                <motion.p 
+                  animate={{ opacity: [1, 0.5, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="text-muted-foreground"
+                >
+                  Analyzing emotions...
+                </motion.p>
+              ) : emotionsError || emotionResponse?.status === 'failed' ? (
+                <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive">
+                  Failed to load emotion data.
+                </div>
+              ) : availableEmotions.length > 0 ? (
+                <div className="space-y-6">
+                  <EmotionFilter
+                    availableEmotions={availableEmotions}
+                    selectedEmotions={selectedEmotions}
+                    onEmotionToggle={handleEmotionToggle}
+                    onSelectAll={handleSelectAllEmotions}
+                    onDeselectAll={handleDeselectAllEmotions}
+                  />
+                  <EmotionChartsGrid
+                    chartData={emotionChartData}
+                    currentTime={currentTime}
+                    selectedEmotions={selectedEmotions}
+                    emotionData={resolvedEmotions}
+                  />
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No emotion data available.</p>
+              )}
+            </div>
+          </SectionCard>
 
           {/* Transcript */}
-          <CollapsibleSection title="Transcript" defaultExpanded={true}>
-            {transcriptResponse?.status === 'not_started' ? (
-              <p className="text-gray-500 italic">Transcription has not started yet.</p>
-            ) : transcriptResponse?.status === 'processing' ? (
-              <p className="text-gray-500 animate-pulse">Transcribing audio...</p>
-            ) : transcriptError || transcriptResponse?.status === 'failed' ? (
-              <p className="text-red-500">Could not load transcript.</p>
-            ) : transcriptMessages.length > 0 ? (
-              <TranscriptionCard messages={transcriptMessages} title="" currentTime={currentTime} emotionData={resolvedEmotions} />
-            ) : (
-              <p className="text-gray-600">No transcript available.</p>
-            )}
-          </CollapsibleSection>
+          <SectionCard accent title="Transcript">
+            <div className="p-0"> {/* No padding for transcript card as it has its own */}
+              {transcriptResponse?.status === 'not_started' ? (
+                <div className="p-6">
+                  <p className="text-muted-foreground italic">Transcription has not started yet.</p>
+                </div>
+              ) : transcriptResponse?.status === 'processing' ? (
+                <div className="p-6">
+                  <motion.p 
+                    animate={{ opacity: [1, 0.5, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="text-muted-foreground"
+                  >
+                    Transcribing audio...
+                  </motion.p>
+                </div>
+              ) : transcriptError || transcriptResponse?.status === 'failed' ? (
+                <div className="p-6">
+                  <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive">
+                    Could not load transcript.
+                  </div>
+                </div>
+              ) : transcriptMessages.length > 0 ? (
+                <TranscriptionCard 
+                  messages={transcriptMessages} 
+                  title="" 
+                  currentTime={currentTime} 
+                  emotionData={resolvedEmotions} 
+                />
+              ) : (
+                <div className="p-6">
+                  <p className="text-muted-foreground">No transcript available.</p>
+                </div>
+              )}
+            </div>
+          </SectionCard>
 
           {/* Session Details */}
-          <CollapsibleSection title="Session Details" defaultExpanded={false}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <h3 className="text-sm text-gray-500 mb-1">Date</h3>
-                <p className="font-medium">{formatDate(metadata.created_at)}</p>
-              </div>
-              <div>
-                <h3 className="text-sm text-gray-500 mb-1">Duration</h3>
-                <p className="font-medium">{formatDuration(metadata.duration)}</p>
-              </div>
-              <div>
-                <h3 className="text-sm text-gray-500 mb-1">Participants</h3>
-                <p className="font-medium">{metadata.participants?.join(', ') || 'No participants listed'}</p>
+          <SectionCard title="Session Details">
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <h3 className="text-sm text-muted-foreground mb-2 font-medium">Date</h3>
+                  <p className="text-foreground font-medium">{formatDate(metadata.created_at)}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm text-muted-foreground mb-2 font-medium">Duration</h3>
+                  <p className="text-foreground font-medium">{formatDuration(metadata.duration)}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm text-muted-foreground mb-2 font-medium">Participants</h3>
+                  <p className="text-foreground font-medium">{metadata.participants?.join(', ') || 'No participants listed'}</p>
+                </div>
               </div>
             </div>
-          </CollapsibleSection>
+          </SectionCard>
         </div>
       </div>
 

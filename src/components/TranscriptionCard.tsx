@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import SpeakerAvatar from '@/components/SpeakerAvatar';
 import { getDominantEmotion, type EmotionEntry } from '@/lib/speakers';
@@ -38,33 +39,62 @@ const Message: React.FC<MessageProps> = ({
   }, [isHighlighted]);
 
   return (
-    <div
+    <motion.div
       ref={messageRef}
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ 
+        opacity: 1, 
+        scale: isHighlighted ? 1.01 : 1,
+      }}
+      transition={{ 
+        duration: 0.3,
+        type: "spring",
+        stiffness: 300,
+        damping: 25
+      }}
       className={cn(
-        "p-4 rounded-lg mb-3 animate-slide-in transition-all duration-300",
+        "rounded-xl mb-4 transition-all duration-300 relative overflow-hidden",
         isHighlighted
-          ? "bg-yellow-100 border-2 border-yellow-400 shadow-md"
-          : "bg-white border border-gray-100 shadow-sm"
+          ? "creative-gradient-highlight"
+          : "bg-card border border-border shadow-card hover:shadow-soft"
       )}
       style={{ animationDelay: `${index * 0.1}s` }}
     >
-      <div className="flex items-start gap-3 mb-2">
-        <SpeakerAvatar
-          speakerName={speaker}
-          emotionData={emotionData}
-          currentTime={currentTime}
-          size={32}
-          className="shrink-0"
-        />
-        <div className="flex-1">
-          <div className="font-medium text-sm text-gray-900">{speaker}</div>
-          {dominantEmotion && (
-            <div className="text-xs text-gray-500 capitalize">{dominantEmotion}</div>
-          )}
+      {/* Left gold rail for active message */}
+      {isHighlighted && (
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+      )}
+      
+      <div className="p-5">
+        <div className="flex items-start gap-4 mb-3">
+          <SpeakerAvatar
+            speakerName={speaker}
+            emotionData={emotionData}
+            currentTime={currentTime}
+            size={36}
+            className="shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-foreground mb-1">{speaker}</div>
+            {dominantEmotion && (
+              <div className="text-xs text-muted-foreground capitalize font-mono">
+                {dominantEmotion}
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Thin gold vertical rail between avatar and text */}
+        <div className="flex gap-4">
+          <div className="w-9 flex justify-center">
+            <div className="w-px bg-border h-full" />
+          </div>
+          <div className="flex-1 text-foreground leading-relaxed">
+            {text}
+          </div>
         </div>
       </div>
-      <div className="text-gray-700 ml-11">{text}</div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -116,12 +146,12 @@ const TranscriptionCard: React.FC<TranscriptionCardProps> = ({
   const currentMessageIndex = getCurrentMessageIndex();
 
   return (
-    <div className="glass-card rounded-lg overflow-hidden h-full flex flex-col animate-fade-in">
-      <div className="p-4 border-b border-gray-100">
-        <h3 className="text-lg font-medium">{title}</h3>
+    <div className="creative-card creative-section-accent h-full flex flex-col">
+      <div className="px-6 py-4 border-b border-border">
+        <h3 className="font-heading text-lg font-medium text-foreground">{title}</h3>
       </div>
 
-      <div className="flex-1 p-4 overflow-y-auto">
+      <div className="flex-1 p-6 overflow-y-auto space-y-1">
         {messages.map((message, index) => (
           <Message
             key={index}
