@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import EmotionChart from './EmotionChart';
 import { cn } from '@/lib/utils';
 
@@ -82,40 +81,20 @@ const EmotionChartsGrid: React.FC<EmotionChartsGridProps> = ({
 
   if (speakerCount === 0) {
     return (
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="text-center py-12"
-      >
-        <div className="creative-card p-8 max-w-sm mx-auto">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-full border-2 border-primary/30 flex items-center justify-center">
-            <span className="text-xl">📊</span>
-          </div>
-          <h3 className="font-heading text-lg font-medium text-foreground mb-2">
-            No Emotion Data Available
-          </h3>
-          <p className="text-muted-foreground text-sm">
-            Upload an audio file to see emotional analysis charts.
-          </p>
-        </div>
-      </motion.div>
+      <div className="text-center text-gray-500 py-8">
+        No emotion data available
+      </div>
     );
   }
 
   return (
-    <div className={cn("grid gap-6", getGridCols(), className)}>
-      {speakers.map((speaker, index) => {
+    <div className={cn("grid gap-4", getGridCols(), className)}>
+      {speakers.map((speaker) => {
         const isActiveSpeaker = activeSpeaker === speaker;
         console.log(`📈 Speaker ${speaker} is ${isActiveSpeaker ? 'ACTIVE' : 'inactive'}`);
         
         return (
-          <motion.div 
-            key={speaker} 
-            className="w-full"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.1 }}
-          >
+          <div key={speaker} className="w-full">
             <EmotionChart
               data={filterChartData(chartData[speaker])}
               title={`Speaker ${speaker} - Emotional Analysis`}
@@ -123,7 +102,7 @@ const EmotionChartsGrid: React.FC<EmotionChartsGridProps> = ({
               currentTime={currentTime}
               isActiveSpeaker={isActiveSpeaker}
             />
-          </motion.div>
+          </div>
         );
       })}
     </div>

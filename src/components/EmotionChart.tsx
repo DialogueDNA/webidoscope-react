@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, ReferenceLine
@@ -46,126 +45,85 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
 
   const currentTimePosition = getCurrentTimePosition();
 
-  // Styling based on speaker activity - muted palette
+  // Styling based on speaker activity
   const getLineStyle = (index: number) => {
-    const baseHue = (index * 45) % 360; // More spread out hues
     if (isActiveSpeaker) {
       return {
-        strokeWidth: 2.5,
-        stroke: `hsl(${baseHue}, 65%, 55%)`,
-        opacity: 0.9
+        strokeWidth: 3,
+        stroke: `hsl(${(index * 60) % 360}, 80%, 50%)`,
+        opacity: 1
       };
     } else {
       return {
         strokeWidth: 1.5,
-        stroke: `hsl(${baseHue}, 35%, 65%)`,
+        stroke: `hsl(${(index * 60) % 360}, 40%, 60%)`,
         opacity: 0.6
       };
     }
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card border border-border rounded-xl p-4 shadow-soft">
-          <h4 className="font-heading text-sm font-medium text-foreground mb-2">
-            Time: {formatTime(label)}
-          </h4>
-          {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center gap-2 text-sm">
-              <div 
-                className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="font-mono text-muted-foreground">{entry.name}:</span>
-              <span className="font-medium text-foreground">
-                {(entry.value * 100).toFixed(1)}%
-              </span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const formatTime = (time: number) => {
-    const mins = Math.floor(time / 60);
-    const secs = Math.floor(time % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const chartOpacity = isActiveSpeaker ? 1 : 0.7;
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.1 }}
-      className={`creative-card transition-all duration-300 ${
-        isActiveSpeaker ? 'ring-2 ring-primary shadow-highlight' : 'hover:shadow-soft'
+    <div 
+      className={`p-6 glass-card rounded-lg card-hover animate-fade-in transition-all duration-300 ${
+        isActiveSpeaker ? 'ring-2 ring-blue-400 shadow-lg' : ''
       }`}
       style={{ opacity: chartOpacity }}
     >
-      <div className="p-6">
-        <h3 className={`font-heading text-lg font-medium mb-4 transition-all duration-300 ${
-          isActiveSpeaker ? 'text-primary' : 'text-foreground'
-        }`}>
-          {title} {isActiveSpeaker && '🎤'}
-        </h3>
-        <ResponsiveContainer width="100%" height={height}>
-          <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis
-              dataKey="end_time"
-              type="number"
-              domain={[0, maxEndTime]}
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-              tickFormatter={formatTime}
-            />
-            <YAxis 
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-              tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend 
-              wrapperStyle={{ 
-                fontSize: '12px',
-                color: 'hsl(var(--muted-foreground))'
-              }}
-            />
+      <h3 className={`text-lg font-medium mb-4 transition-all duration-300 ${
+        isActiveSpeaker ? 'text-blue-600 font-semibold' : 'text-gray-600'
+      }`}>
+        {title} {isActiveSpeaker && '🎤'}
+      </h3>
+      <ResponsiveContainer width="100%" height={height}>
+        <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <XAxis
+            dataKey="end_time"
+            type="number"
+            domain={[0, maxEndTime]}
+            tick={{ fontSize: 12 }}
+            stroke="#888"
+            tickFormatter={(value) => {
+              const mins = Math.floor(value / 60);
+              const secs = Math.floor(value % 60);
+              return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }}
+          />
+          <YAxis tick={{ fontSize: 12 }} stroke="#888" />
+          <Tooltip />
+          <Legend />
 
-            {currentTime !== undefined && (
-              <ReferenceLine
-                x={currentTime}
-                stroke="hsl(var(--primary))"
-                strokeWidth={2}
-                strokeDasharray="4 4"
-              />
-            )}
+          {currentTime !== undefined && (
+            <ReferenceLine
+              x={currentTime.toFixed(2)}
+              stroke={isActiveSpeaker ? "#ff4444" : "#ff6b6b"}
+              strokeWidth={isActiveSpeaker ? 3 : 2}
+              strokeDasharray="5 5"
+            />
+          )}
 
-            {data.length > 0 &&
-              Object.keys(data[0])
-                .filter(key => key !== 'end_time')
-                .map((key, i) => {
-                  const lineStyle = getLineStyle(i);
-                  return (
-                    <Line
-                      key={key}
-                      type="monotone"
-                      dataKey={key}
-                      strokeWidth={lineStyle.strokeWidth}
-                      stroke={lineStyle.stroke}
-                      opacity={lineStyle.opacity}
-                      dot={false}
-                      activeDot={{ r: 4, fill: lineStyle.stroke }}
-                    />
-                  );
-                })}
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </motion.div>
+          {data.length > 0 &&
+            Object.keys(data[0])
+              .filter(key => key !== 'end_time')
+              .map((key, i) => {
+                const lineStyle = getLineStyle(i);
+                return (
+                  <Line
+                    key={key}
+                    type="monotone"
+                    dataKey={key}
+                    strokeWidth={lineStyle.strokeWidth}
+                    stroke={lineStyle.stroke}
+                    opacity={lineStyle.opacity}
+                    dot={false}
+                  />
+                );
+              })}
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 

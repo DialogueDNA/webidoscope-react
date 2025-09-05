@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -56,19 +55,11 @@ const Navbar = () => {
   };
 
   return (
-    <motion.nav 
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="w-full px-6 py-4 flex items-center justify-between bg-card/95 backdrop-blur-sm border-b border-border shadow-soft sticky top-0 z-50"
-    >
+    <nav className="w-full px-6 py-4 flex items-center justify-between bg-white border-b border-gray-100 animate-fade-in">
       {/* Logo and app name */}
-      <div className="flex items-center space-x-3">
-        <motion.div 
-          whileHover={{ scale: 1.05 }}
-          className="h-8 w-8 bg-primary rounded-full shadow-sm"
-        />
-        <span className="font-heading text-xl font-medium text-foreground">EmotionAI Tool</span>
+      <div className="flex items-center space-x-2">
+        <div className="h-8 w-8 bg-black rounded-full"></div>
+        <span className="font-semibold text-lg text-black">EmotionAI Tool</span>
       </div>
 
       {/* Navigation links and actions */}
@@ -76,11 +67,11 @@ const Navbar = () => {
         {/* Disabled Live Dashboard button with tooltip */}
         <button
           onClick={handleLiveDashboardClick}
-          className="text-sm font-medium transition-colors text-muted-foreground cursor-not-allowed relative group"
+          className="text-sm font-medium transition-colors text-gray-400 cursor-not-allowed relative group"
           disabled
         >
           Live Dashboard
-          <div className="absolute bottom-[-32px] left-1/2 transform -translate-x-1/2 bg-foreground text-background text-xs rounded-lg px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-soft">
+          <div className="absolute bottom-[-32px] left-1/2 transform -translate-x-1/2 bg-black text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
             Coming Soon
           </div>
         </button>
@@ -88,21 +79,17 @@ const Navbar = () => {
         <NavLink href="/sessions" active={isActive('/sessions')}>Sessions</NavLink>
         <NavLink href="/settings" active={isActive('/settings')}>Settings</NavLink>
         {/* Logout button */}
-        <motion.div
-          whileTap={{ scale: 0.98 }}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLogout}
+          className="flex items-center gap-2 text-gray-600 hover:text-black"
         >
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground creative-focus-ring"
-          >
-            <LogOut size={16} />
-            <span>Logout</span>
-          </Button>
-        </motion.div>
+          <LogOut size={16} />
+          <span>Logout</span>
+        </Button>
       </div>
-    </motion.nav>
+    </nav>
   );
 };
 
@@ -123,21 +110,13 @@ const NavLink = ({ href, children, active }: NavLinkProps) => {
     <Link
       to={href}
       className={cn(
-        "text-sm font-medium transition-all duration-300 hover:text-foreground relative creative-focus-ring",
+        "text-sm font-medium transition-colors hover:text-black relative",
         active
-          ? "text-foreground" 
-          : "text-muted-foreground"
+          ? "text-black after:content-[''] after:absolute after:w-full after:h-0.5 after:bg-black after:bottom-[-8px] after:left-0"
+          : "text-gray-600"
       )}
     >
       {children}
-      {active && (
-        <motion.div
-          layoutId="activeNavUnderline"
-          className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"
-          initial={false}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        />
-      )}
     </Link>
   );
 };

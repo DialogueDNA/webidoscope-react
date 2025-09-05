@@ -19,23 +19,7 @@ export default {
 			}
 		},
 		extend: {
-			fontFamily: {
-				'heading': ['var(--font-heading)', 'serif'],
-				'body': ['var(--font-body)', 'sans-serif'],
-				'mono': ['var(--font-mono)', 'monospace'],
-			},
 			colors: {
-				// Creative Classic Color Palette
-				ink: 'hsl(var(--color-ink))',
-				gold: 'hsl(var(--color-gold))',
-				parchment: 'hsl(var(--color-bg))',
-				neutral: {
-					200: 'hsl(var(--color-neutral-200))',
-					300: 'hsl(var(--color-neutral-300))',
-				},
-				success: 'hsl(var(--color-success))',
-				danger: 'hsl(var(--color-danger))',
-				info: 'hsl(var(--color-info))',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -81,17 +65,9 @@ export default {
 				}
 			},
 			borderRadius: {
-				'card': 'var(--radius-card)',
-				'input': 'var(--radius-input)',
-				'button': 'var(--radius-button)',
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
-			},
-			boxShadow: {
-				'soft': 'var(--shadow-soft)',
-				'highlight': 'var(--shadow-highlight)',
-				'card': 'var(--shadow-card)',
 			},
 			keyframes: {
 				'accordion-down': {
