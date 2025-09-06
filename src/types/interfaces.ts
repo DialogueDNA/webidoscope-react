@@ -72,7 +72,7 @@ export type Emotions = EmotionBundle[];
 
 /** 3) Summary */
 export interface Summary {
-  text: string;                               // normalized from "summary"
+  summary: string;
   perSpeaker?: Record<string, string>;
   bullets?: string[];
   usage?: Record<string, number>;

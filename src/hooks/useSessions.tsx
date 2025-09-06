@@ -36,7 +36,7 @@ export const useSessionAudio = (sessionId: string) => {
   return useQuery({
     queryKey: ['artifact','audio', sessionId],
     queryFn: () => fetchAudio(sessionId!),
-    enabled: !!sessionId
+    enabled: !!user && !!sessionId
   });
 };
 

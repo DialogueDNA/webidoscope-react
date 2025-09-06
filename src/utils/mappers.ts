@@ -85,9 +85,9 @@ export function mapEmotions(raw: unknown): Emotions {
 /** ===================== Summary mapper ===================== */
 
 export function mapSummary(raw: unknown): Summary {
-  const r = (raw as RawSummaryOutput) ?? ({} as RawSummaryOutput);
+  const r = (raw[0] as RawSummaryOutput) ?? ({} as RawSummaryOutput);
   return {
-    text: String((r as any).text ?? r.summary ?? ''),
+    summary: String((r as any).summary ?? r.summary ?? ''),
     perSpeaker: rec<string>((r as any).perSpeaker) ?? r.per_speaker ?? undefined,
     bullets: Array.isArray(r.bullets) ? r.bullets.filter(Boolean) : undefined,
     usage: rec<number>(r.usage) ?? undefined,

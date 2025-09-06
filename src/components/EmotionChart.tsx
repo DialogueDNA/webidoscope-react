@@ -25,7 +25,10 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
   currentTime,
   isActiveSpeaker = false
 }) => {
-  const maxEndTime = Math.max(...data.map(d => d.end_time as number));
+
+  const safeEndTimes = data.map(d => Number(d.end_time ?? 0));
+  const maxEndTime = safeEndTimes.length ? Math.max(...safeEndTimes) : 1;
+
   const getCurrentTimePosition = () => {
     if (currentTime === undefined || !data.length) return null;
 
@@ -82,7 +85,7 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
           <XAxis
             dataKey="end_time"
             type="number"
-            domain={[0, maxEndTime]}
+            domain={[0, Math.max(0, maxEndTime)]}
             tick={{ fontSize: 12 }}
             stroke="#888"
             tickFormatter={(value) => {
@@ -95,9 +98,9 @@ const EmotionChart: React.FC<EmotionChartProps> = ({
           <Tooltip />
           <Legend />
 
-          {currentTime !== undefined && (
+          {currentTimePosition != null && (
             <ReferenceLine
-              x={currentTime.toFixed(2)}
+              x={Number(currentTimePosition.toFixed(2))}
               stroke={isActiveSpeaker ? "#ff4444" : "#ff6b6b"}
               strokeWidth={isActiveSpeaker ? 3 : 2}
               strokeDasharray="5 5"

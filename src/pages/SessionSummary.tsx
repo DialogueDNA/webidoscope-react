@@ -63,12 +63,6 @@ const SessionSummary = () => {
       refetch: refetchSummary
   } = useSessionSummary(id)
 
-  console.log(metadataResponse)
-  console.log(audioResponse)
-  console.log(transcriptResponse)
-  console.log(emotionResponse)
-  console.log(summaryResponse)
-
   usePollUntilReady(metadataResponse?.session?.session_status, refetchMetadata);
   usePollUntilReady(audioResponse?.audio?.status, refetchAudio);
   usePollUntilReady(transcriptResponse?.transcript?.status, refetchTranscript);
@@ -78,7 +72,7 @@ const SessionSummary = () => {
   const [resolvedAudio, setResolvedAudio] = React.useState<string | null>(null);
   const [resolvedTranscript, setResolvedTranscript] = React.useState<Transcript>([]);
   const [resolvedEmotions, setResolvedEmotions] = React.useState<Emotions>([]);
-  const [resolvedSummary, setResolvedSummary] = React.useState<Summary>({ text: '' });
+  const [resolvedSummary, setResolvedSummary] = React.useState<Summary>({ summary: '' });
 
   React.useEffect(() => {
     if (audioResponse?.audio?.status === "completed") {
@@ -109,17 +103,15 @@ const SessionSummary = () => {
       fetch(summaryResponse?.summary?.result?.access_url)
         .then(r => r.json())
         .then(json => setResolvedSummary(mapSummary(json)))
-        .catch(() => setResolvedSummary({ text: '' }));
+        .catch(() => setResolvedSummary({ summary: '' }));
     }
   }, [summaryResponse]);
 
   React.useEffect(() => {
     if (resolvedEmotions && Array.isArray(resolvedEmotions) && resolvedEmotions.length > 0) {
-      console.log('🔍 Processing resolved emotions:', resolvedEmotions);
       
       const emotions = new Set<string>();
       resolvedEmotions.forEach((bundle: EmotionBundle) => {
-        console.log('📊 Processing entry:', bundle);
         const scores =
           bundle?.mixed?.scores ??
           bundle?.audio?.scores ??
@@ -131,7 +123,6 @@ const SessionSummary = () => {
       });
       
       const emotionList = Array.from(emotions).sort();
-      console.log('📝 Available emotions:', emotionList);
       setAvailableEmotions(emotionList);
       setSelectedEmotions(emotionList); // Start with all emotions selected
     }
@@ -312,11 +303,7 @@ const SessionSummary = () => {
       </div>
     );
   }
-  
-  console.log('🎯 Final emotion chart data being passed to component:', resolvedEmotions);
-  console.log('🎭 Selected emotions:', selectedEmotions);
-  console.log('📊 Available emotions:', availableEmotions);
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
       <Navbar />
@@ -366,7 +353,7 @@ const SessionSummary = () => {
           ) : (
             <div
               className="prose prose-gray max-w-none leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(resolvedSummary?.text || "") }}
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(resolvedSummary?.summary || "") }}
             />
           )}
         </CollapsibleSection>
@@ -377,7 +364,7 @@ const SessionSummary = () => {
             <p className="text-gray-500 italic">Emotion analysis has not started.</p>
           ) : emotionResponse?.analyzed_emotions?.status === 'processing' ? (
             <p className="text-gray-500 animate-pulse">Analyzing emotions...</p>
-          ) : emotionsError || emotionResponse.analyzed_emotions?.status === 'failed' ? (
+          ) : emotionsError || emotionResponse?.analyzed_emotions?.status === 'failed' ? (
             <p className="text-red-500">Failed to load emotion data.</p>
           ) : availableEmotions.length > 0 ? (
             <>
