@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import SessionCard from '@/components/SessionCard';
 import NewSessionModal from '@/components/NewSessionModal';
 import SessionDeleteDialog from '@/components/SessionDeleteDialog';
+import SessionsFilter, { SessionFilters } from '@/components/SessionsFilter';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useSessionsData } from '@/hooks/useSessionsData';
@@ -16,11 +17,45 @@ const Sessions = () => {
   const [selectedSessions, setSelectedSessions] = useState<string[]>([]);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [showSelection, setShowSelection] = useState(false);
+  const [filters, setFilters] = useState<SessionFilters>({});
   
   const navigate = useNavigate();
-  const { data: sessions = [], isLoading, error } = useSessionsData();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { data: sessions = [], isLoading, error } = useSessionsData(filters);
   const deleteSession = useDeleteSession();
   const deleteMultipleSessions = useDeleteMultipleSessions();
+
+  // Sync filters with URL parameters
+  useEffect(() => {
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const summaryType = searchParams.get('summaryType');
+
+    const urlFilters: SessionFilters = {};
+    if (startDate) urlFilters.startDate = new Date(startDate);
+    if (endDate) urlFilters.endDate = new Date(endDate);
+    if (summaryType) urlFilters.summaryType = summaryType;
+
+    setFilters(urlFilters);
+  }, [searchParams]);
+
+  // Update URL when filters change
+  const handleFiltersChange = (newFilters: SessionFilters) => {
+    const params = new URLSearchParams();
+    
+    if (newFilters.startDate) {
+      params.set('startDate', newFilters.startDate.toISOString().split('T')[0]);
+    }
+    if (newFilters.endDate) {
+      params.set('endDate', newFilters.endDate.toISOString().split('T')[0]);
+    }
+    if (newFilters.summaryType) {
+      params.set('summaryType', newFilters.summaryType);
+    }
+
+    setSearchParams(params);
+    setFilters(newFilters);
+  };
 
   const handleNewSessionClick = () => {
     setIsModalOpen(true);
@@ -143,40 +178,81 @@ const Sessions = () => {
       <Navbar />
       
       <div className="flex-1 container mx-auto py-8 px-4">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold animate-fade-in">Your Sessions</h1>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={handleToggleSelection}
+              className="animate-fade-in"
+            >
+              {showSelection ? 'Cancel Selection' : 'Select Sessions'}
+            </Button>
+            <Button 
+              className="bg-black text-white hover:bg-black/90 animate-fade-in"
+              onClick={handleNewSessionClick}
+            >
+              New Session
+            </Button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <SessionsFilter filters={filters} onFiltersChange={handleFiltersChange} />
+
+        {/* Results info */}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-muted-foreground">
+            {sessions.length === 0 
+              ? 'No sessions found' 
+              : `${sessions.length} session${sessions.length === 1 ? '' : 's'} found`
+            }
+          </p>
+        </div>
+
         {sessions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <div className="flex flex-col items-center justify-center min-h-[40vh] text-center">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold mb-4 animate-fade-in">Welcome to EmotionAI Tool</h1>
-              <p className="text-xl text-gray-600 mb-8 animate-fade-in">You haven't created any sessions yet.</p>
-              <Button 
-                className="bg-black text-white hover:bg-black/90 animate-fade-in text-lg px-8 py-4"
-                onClick={handleNewSessionClick}
-              >
-                Start Your First Session
-              </Button>
+              {Object.keys(filters).some(key => filters[key as keyof SessionFilters]) ? (
+                <>
+                  <h2 className="text-2xl font-bold mb-4 animate-fade-in">No sessions found</h2>
+                  <p className="text-xl text-gray-600 mb-8 animate-fade-in">
+                    Try adjusting your filters or create a new session.
+                  </p>
+                  <div className="flex gap-2 justify-center">
+                    <Button 
+                      variant="outline"
+                      onClick={() => handleFiltersChange({})}
+                      className="animate-fade-in"
+                    >
+                      Clear Filters
+                    </Button>
+                    <Button 
+                      className="bg-black text-white hover:bg-black/90 animate-fade-in"
+                      onClick={handleNewSessionClick}
+                    >
+                      New Session
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-bold mb-4 animate-fade-in">No sessions yet</h2>
+                  <p className="text-xl text-gray-600 mb-8 animate-fade-in">
+                    You haven't created any sessions yet.
+                  </p>
+                  <Button 
+                    className="bg-black text-white hover:bg-black/90 animate-fade-in text-lg px-8 py-4"
+                    onClick={handleNewSessionClick}
+                  >
+                    Start Your First Session
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         ) : (
           <>
-            <div className="flex justify-between items-center mb-4">
-              <h1 className="text-3xl font-bold animate-fade-in">Your Sessions</h1>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline"
-                  onClick={handleToggleSelection}
-                  className="animate-fade-in"
-                >
-                  {showSelection ? 'Cancel Selection' : 'Select Sessions'}
-                </Button>
-                <Button 
-                  className="bg-black text-white hover:bg-black/90 animate-fade-in"
-                  onClick={handleNewSessionClick}
-                >
-                  New Session
-                </Button>
-              </div>
-            </div>
-
             {showSelection && (
               <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2">

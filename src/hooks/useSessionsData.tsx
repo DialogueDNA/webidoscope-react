@@ -7,6 +7,7 @@ interface Metadata {
   title: string;
   status: 'not_started' | 'queued' | 'processing' | 'ready' | 'error';
   summary: string;
+  summary_preset?: string;
   duration: number | null;
   participants: string[] | null;
   created_at: string;
@@ -14,13 +15,32 @@ interface Metadata {
   // add any other fields you expect
 }
 
-export const useSessionsData = () => {
+export interface SessionFilters {
+  startDate?: Date;
+  endDate?: Date;
+  summaryType?: string;
+}
+
+export const useSessionsData = (filters?: SessionFilters) => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['sessions', user?.id],
+    queryKey: ['sessions', user?.id, filters],
     queryFn: async () => {
-      const res = await apiClient("/api/sessions/metadata");
+      const params = new URLSearchParams();
+      
+      if (filters?.startDate) {
+        params.append('startDate', filters.startDate.toISOString().split('T')[0]);
+      }
+      if (filters?.endDate) {
+        params.append('endDate', filters.endDate.toISOString().split('T')[0]);
+      }
+      if (filters?.summaryType) {
+        params.append('summaryType', filters.summaryType);
+      }
+
+      const url = `/api/sessions/metadata${params.toString() ? `?${params.toString()}` : ''}`;
+      const res = await apiClient(url);
       return res ?? []; // Ensure not undefined
     },
     enabled: !!user,
