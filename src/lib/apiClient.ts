@@ -28,15 +28,18 @@ export const apiClient = async (
     let errorMessage = "Request failed";
 
     try {
-      const err = await res.json();
+      const err = await res?.json();
       errorMessage = err.detail || err.message || errorMessage;
     } catch (_) {
       // fallback for non-JSON errors
       errorMessage = `${res.status} ${res.statusText}`;
     }
 
-  throw new Error(errorMessage);
+    throw new Error(errorMessage);
   }
 
-  return res.json();
+  if (res.status == 204)
+    return {status: "Deleted"};
+
+  return res?.json();
 };

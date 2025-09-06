@@ -9,16 +9,17 @@ import CollapsibleSection from '@/components/CollapsibleSection';
 import EmotionFilter from '@/components/EmotionFilter';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
-import {
-  useSessionEmotion,
-  useSessionTranscript,
-  useSessionSummary,
-  useSessionMetadata, useSessionAudio
-} from '@/hooks/useSessionsData';
 import { usePollUntilReady } from '@/hooks/usePollUntilReady';
 import { toast } from '@/hooks/use-toast';
 import {mapEmotions, mapSummary, mapTranscription} from "@/utils/mappers.ts";
 import type {EmotionBundle, Emotions, Summary, Transcript} from "@/types/interfaces.ts";
+import {
+  useSessionAudio,
+  useSessionMetadata,
+  useSessionEmotion,
+  useSessionSummary,
+  useSessionTranscript
+} from "@/hooks/useSessions.tsx";
 
 const SessionSummary = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,34 +33,41 @@ const SessionSummary = () => {
     isLoading: loadingMetadata,
     error: metadataError,
     refetch: refetchMetadata
-  } = useSessionMetadata(id || '');
+  } = useSessionMetadata(id)
 
   const {
     data: audioResponse,
     isLoading: loadingAudio,
     error: audioError,
     refetch: refetchAudio
-  } = useSessionAudio(id || '');
+  } = useSessionAudio(id)
 
   const {
     data: transcriptResponse,
     isLoading: loadingTranscript,
     error: transcriptError,
     refetch: refetchTranscript
-  } = useSessionTranscript(id || '');
+  } = useSessionTranscript(id)
 
   const {
     data: emotionResponse,
     isLoading: loadingEmotions,
     error: emotionsError,
     refetch: refetchEmotion
-  } = useSessionEmotion(id || '');
+  } = useSessionEmotion(id)
+
   const {
-    data: summaryResponse,
-    isLoading: loadingSummary,
-    error: summaryError,
-    refetch: refetchSummary
-  } = useSessionSummary(id || '');
+      data: summaryResponse,
+      isLoading: loadingSummary,
+      error: summaryError,
+      refetch: refetchSummary
+  } = useSessionSummary(id)
+
+  console.log(metadataResponse)
+  console.log(audioResponse)
+  console.log(transcriptResponse)
+  console.log(emotionResponse)
+  console.log(summaryResponse)
 
   usePollUntilReady(metadataResponse?.session?.session_status, refetchMetadata);
   usePollUntilReady(audioResponse?.audio?.status, refetchAudio);

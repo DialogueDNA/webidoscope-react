@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Upload } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import {apiClient} from "@/lib/apiClient.ts";
+import {useUploadSession} from "@/hooks/useSessions.tsx";
 
 /**
  * Props for NewSessionModal.
@@ -51,6 +51,8 @@ const NewSessionModal = ({ open, onOpenChange }: NewSessionModalProps) => {
     }
   };
 
+  const { mutateAsync: uploadSession } = useUploadSession();
+
   /**
    * Handles the upload process: uploads file to Supabase, creates session record,
    * and sends file to backend for processing.
@@ -81,10 +83,9 @@ const NewSessionModal = ({ open, onOpenChange }: NewSessionModalProps) => {
       formData.append("file", selectedFile);
       formData.append("title", sessionTitle.trim());
 
-      const response = await apiClient("/api/sessions", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await uploadSession(formData);
+
+      console.log(response);
 
       setIsUploading(false);
       onOpenChange(false);
@@ -97,7 +98,7 @@ const NewSessionModal = ({ open, onOpenChange }: NewSessionModalProps) => {
       });
 
       // Redirect to the new session
-      navigate(`/session/${response.session_id}`);
+      navigate(`/session/${response.session.id}`);
 
     } catch (error: any) {
       console.error("Upload failed:", error);

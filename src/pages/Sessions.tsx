@@ -7,8 +7,7 @@ import NewSessionModal from '@/components/NewSessionModal';
 import SessionDeleteDialog from '@/components/SessionDeleteDialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useSessionsData } from '@/hooks/useSessionsData';
-import { useDeleteSession, useDeleteMultipleSessions } from '@/hooks/useSessionOperations';
+import {useDeleteMultipleSessions, useDeleteSession, useSessions} from "@/hooks/useSessions.tsx";
 
 const Sessions = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -18,9 +17,14 @@ const Sessions = () => {
   const [showSelection, setShowSelection] = useState(false);
   
   const navigate = useNavigate();
-  const { data: sessions, isLoading, error } = useSessionsData();
-  const deleteSession = useDeleteSession();
-  const deleteMultipleSessions = useDeleteMultipleSessions();
+
+  const {
+    data: sessionsData,
+    isLoading: sessionsLoading,
+    error: sessionsError,
+  } = useSessions();
+  const deleteSessionMutation = useDeleteSession();
+  const deleteMultipleSessionsMutation = useDeleteMultipleSessions();
 
   const handleNewSessionClick = () => {
     setIsModalOpen(true);
@@ -33,7 +37,7 @@ const Sessions = () => {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedSessions(sessions.sessions.map(session => session.id));
+      setSelectedSessions(sessionsData.sessions?.map(session => session.id));
     } else {
       setSelectedSessions([]);
     }
@@ -60,9 +64,9 @@ const Sessions = () => {
 
   const handleConfirmDelete = () => {
     if (sessionToDelete) {
-      deleteSession.mutate(sessionToDelete);
+      deleteSessionMutation.mutate(sessionToDelete);
     } else if (selectedSessions.length > 0) {
-      deleteMultipleSessions.mutate(selectedSessions, {
+      deleteMultipleSessionsMutation.mutate(selectedSessions, {
         onSuccess: () => {
           setSelectedSessions([]);
           setShowSelection(false);
@@ -73,14 +77,14 @@ const Sessions = () => {
 
   const getDeleteDialogData = () => {
     if (sessionToDelete) {
-      const session = sessions.sessions.find(s => s.id === sessionToDelete);
+      const session = sessionsData.sessions?.find(s => s.id === sessionToDelete);
       return {
         count: 1,
         titles: session ? [session.title] : []
       };
     }
     
-    const selectedSessionData = sessions.sessions.filter(s => selectedSessions.includes(s.id));
+    const selectedSessionData = sessionsData.sessions?.filter(s => selectedSessions.includes(s.id));
     return {
       count: selectedSessions.length,
       titles: selectedSessionData.map(s => s.title)
@@ -110,8 +114,7 @@ const Sessions = () => {
     return parts.join(' ');
   };
 
-
-  if (isLoading) {
+  if (sessionsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
         <Navbar />
@@ -122,7 +125,7 @@ const Sessions = () => {
     );
   }
 
-  if (error) {
+  if (sessionsError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
         <Navbar />
@@ -143,7 +146,7 @@ const Sessions = () => {
       <Navbar />
       
       <div className="flex-1 container mx-auto py-8 px-4">
-        {sessions.sessions.length === 0 ? (
+        {sessionsData.sessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-4 animate-fade-in">Welcome to EmotionAI Tool</h1>
@@ -181,11 +184,11 @@ const Sessions = () => {
               <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2">
                   <Checkbox
-                    checked={selectedSessions.length === sessions.sessions.length}
+                    checked={selectedSessions.length === sessionsData.sessions.length}
                     onCheckedChange={handleSelectAll}
                   />
                   <span className="text-sm text-gray-600">
-                    Select All ({selectedSessions.length} of {sessions.sessions.length} selected)
+                    Select All ({selectedSessions.length} of {sessionsData.sessions.length} selected)
                   </span>
                 </div>
                 
@@ -200,9 +203,9 @@ const Sessions = () => {
                 )}
               </div>
             )}
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sessions.sessions.map((session) => (
+              {sessionsData.sessions.map((session) => (
                 <SessionCard
                   key={session.id}
                   id={session.id}
