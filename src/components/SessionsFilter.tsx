@@ -98,9 +98,9 @@ const SessionsFilter: React.FC<SessionsFilterProps> = ({ filters, onFiltersChang
       {isOpen && (
         <div className="rounded-lg border bg-card p-4 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Start Date */}
+            {/* Created After */}
             <div className="space-y-2">
-              <Label>Start Date</Label>
+              <Label>Created After</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -111,7 +111,7 @@ const SessionsFilter: React.FC<SessionsFilterProps> = ({ filters, onFiltersChang
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filters.startDate ? format(filters.startDate, "PPP") : "Pick a date"}
+                    {filters.startDate ? format(filters.startDate, "PPP") : "Select date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -126,9 +126,9 @@ const SessionsFilter: React.FC<SessionsFilterProps> = ({ filters, onFiltersChang
               </Popover>
             </div>
 
-            {/* End Date */}
+            {/* Created Before */}
             <div className="space-y-2">
-              <Label>End Date</Label>
+              <Label>Created Before</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -139,7 +139,7 @@ const SessionsFilter: React.FC<SessionsFilterProps> = ({ filters, onFiltersChang
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filters.endDate ? format(filters.endDate, "PPP") : "Pick a date"}
+                    {filters.endDate ? format(filters.endDate, "PPP") : "Select date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
