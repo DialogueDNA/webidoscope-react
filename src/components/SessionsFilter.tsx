@@ -97,6 +97,17 @@ const SessionsFilter: React.FC<SessionsFilterProps> = ({ filters, onFiltersChang
       {/* Filter Panel */}
       {isOpen && (
         <div className="rounded-lg border bg-card p-4 space-y-4">
+          {/* Show All Sessions Button */}
+          <div className="flex justify-center">
+            <Button
+              variant={!hasActiveFilters ? "default" : "outline"}
+              onClick={handleClearFilters}
+              className="w-full max-w-xs"
+            >
+              Show All Sessions
+            </Button>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Created After */}
             <div className="space-y-2">
