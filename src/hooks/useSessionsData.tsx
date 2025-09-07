@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/apiClient.ts';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Metadata {
   id: string;
@@ -27,6 +28,12 @@ export const useSessionsData = (filters?: SessionFilters) => {
   return useQuery({
     queryKey: ['sessions', user?.id, filters],
     queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('No authentication token');
+      }
+
       const params = new URLSearchParams();
       
       if (filters?.startDate) {
@@ -39,9 +46,22 @@ export const useSessionsData = (filters?: SessionFilters) => {
         params.append('summary_type', filters.summaryType);
       }
 
-      const url = `/api/sessions/metadata${params.toString() ? `?${params.toString()}` : ''}`;
-      console.log('API URL:', url); // Debug log
-      const res = await apiClient(url);
+      const url = `https://vyihpwcrioptkvafqfmw.supabase.co/functions/v1/sessions-metadata${params.toString() ? `?${params.toString()}` : ''}`;
+      console.log('Supabase Edge Function URL:', url); // Debug log
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const res = await response.json();
       return res ?? []; // Ensure not undefined
     },
     enabled: !!user,
