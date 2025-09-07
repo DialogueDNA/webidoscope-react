@@ -30,16 +30,17 @@ export const useSessionsData = (filters?: SessionFilters) => {
       const params = new URLSearchParams();
       
       if (filters?.startDate) {
-        params.append('startDate', filters.startDate.toISOString().split('T')[0]);
+        params.append('created_after', filters.startDate.toISOString().split('T')[0]);
       }
       if (filters?.endDate) {
-        params.append('endDate', filters.endDate.toISOString().split('T')[0]);
+        params.append('created_before', filters.endDate.toISOString().split('T')[0]);
       }
       if (filters?.summaryType) {
-        params.append('summaryType', filters.summaryType);
+        params.append('summary_type', filters.summaryType);
       }
 
       const url = `/api/sessions/metadata${params.toString() ? `?${params.toString()}` : ''}`;
+      console.log('API URL:', url); // Debug log
       const res = await apiClient(url);
       return res ?? []; // Ensure not undefined
     },
