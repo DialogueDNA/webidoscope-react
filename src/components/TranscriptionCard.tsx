@@ -29,14 +29,14 @@ const Message: React.FC<MessageProps> = ({
 
   // Auto-scroll to highlighted message
   React.useEffect(() => {
-    if (isHighlighted && messageRef.current) {
-      messageRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
-    }
-  }, [isHighlighted]);
-
+  if (isHighlighted && messageRef.current) {
+    messageRef.current.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'nearest',
+    });
+  }
+}, [isHighlighted]);
   return (
     <div
       ref={messageRef}
@@ -121,7 +121,7 @@ const TranscriptionCard: React.FC<TranscriptionCardProps> = ({
         <h3 className="text-lg font-medium">{title}</h3>
       </div>
 
-      <div className="flex-1 p-4 overflow-y-auto">
+      <div className="flex-1 p-4 overflow-y-auto max-h-[60vh]" data-transcript-container>
         {messages.map((message, index) => (
           <Message
             key={index}
