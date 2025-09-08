@@ -162,9 +162,26 @@ serve(async (req) => {
     let summaryContent = 'Summary not yet generated'
     if (session.summary_url && session.summary_status === 'completed') {
       try {
-        const summaryResponse = await fetch(session.summary_url)
-        if (summaryResponse.ok) {
-          summaryContent = await summaryResponse.text()
+        // The summary_url from database is just the blob path, need to construct full URL
+        const summaryBlobPath = session.summary_url
+        console.log('Summary blob path:', summaryBlobPath)
+        
+        // Use Supabase client to get the signed URL for the blob
+        const { data: signedUrl, error: urlError } = await supabase.storage
+          .from('audio-sessions')
+          .createSignedUrl(summaryBlobPath, 3600) // 1 hour expiry
+          
+        if (urlError) {
+          console.error('Error creating signed URL:', urlError)
+        } else if (signedUrl) {
+          console.log('Generated signed URL for summary')
+          const summaryResponse = await fetch(signedUrl.signedUrl)
+          if (summaryResponse.ok) {
+            summaryContent = await summaryResponse.text()
+            console.log('Successfully fetched summary content, length:', summaryContent.length)
+          } else {
+            console.error('Summary fetch failed with status:', summaryResponse.status)
+          }
         }
       } catch (error) {
         console.error('Error fetching summary:', error)
