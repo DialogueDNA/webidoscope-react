@@ -8,6 +8,7 @@ interface MessageProps {
   text: string;
   index: number;
   isHighlighted?: boolean;
+  containerRef: React.RefObject<HTMLDivElement>;
   emotionData?: EmotionEntry[];
   currentTime?: number;
   start_time?: number;
@@ -19,32 +20,54 @@ const Message: React.FC<MessageProps> = ({
   text,
   index,
   isHighlighted = false,
+  containerRef,
   emotionData,
   currentTime,
-  start_time,
-  end_time
 }) => {
   const dominantEmotion = getDominantEmotion(emotionData || [], speaker, currentTime || 0);
-  const messageRef = React.useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to highlighted message
+
+  const messageRef = React.useRef<HTMLDivElement | null>(null);
+  const didMountRef = React.useRef(false);
+
   React.useEffect(() => {
-  if (isHighlighted && messageRef.current) {
-    messageRef.current.scrollIntoView({
-      behavior: 'smooth',
-      block: 'nearest',
-      inline: 'nearest',
-    });
-  }
-}, [isHighlighted]);
+
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+
+    if (!isHighlighted) return;
+
+    const container = containerRef.current;
+    const el = messageRef.current;
+    if (!container || !el) return;
+
+
+    const cRect = container.getBoundingClientRect();
+    const eRect = el.getBoundingClientRect();
+    const padding = 24;
+
+    const above = eRect.top < cRect.top + padding;
+    const below = eRect.bottom > cRect.bottom - padding;
+
+    if (above || below) {
+      const target = el.offsetTop - container.clientHeight / 2 + el.clientHeight / 2;
+      container.scrollTo({
+        top: Math.max(0, target),
+        behavior: 'smooth',
+      });
+    }
+  }, [isHighlighted, containerRef]);
+
   return (
     <div
       ref={messageRef}
       className={cn(
-        "p-4 rounded-lg mb-3 animate-slide-in transition-all duration-300",
+        'p-4 rounded-lg mb-3 animate-slide-in transition-all duration-300',
         isHighlighted
-          ? "bg-yellow-100 border-2 border-yellow-400 shadow-md"
-          : "bg-white border border-gray-100 shadow-sm"
+          ? 'bg-yellow-100 border-2 border-yellow-400 shadow-md'
+          : 'bg-white border border-gray-100 shadow-sm'
       )}
       style={{ animationDelay: `${index * 0.1}s` }}
     >
@@ -84,8 +107,10 @@ const TranscriptionCard: React.FC<TranscriptionCardProps> = ({
   messages,
   title,
   currentTime,
-  emotionData
+  emotionData,
 }) => {
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+
   const getCurrentMessageIndex = () => {
     if (currentTime === undefined || !messages.length) return -1;
     
@@ -109,7 +134,7 @@ const TranscriptionCard: React.FC<TranscriptionCardProps> = ({
         lastEndedIndex = i;
       }
     }
-    
+
     return lastEndedIndex;
   };
 
@@ -121,12 +146,17 @@ const TranscriptionCard: React.FC<TranscriptionCardProps> = ({
         <h3 className="text-lg font-medium">{title}</h3>
       </div>
 
-      <div className="flex-1 p-4 overflow-y-auto max-h-[60vh]" data-transcript-container>
+      <div
+        ref={containerRef}
+        className="flex-1 p-4 overflow-y-auto max-h-[60vh] overscroll-contain"
+        data-transcript-container
+      >
         {messages.map((message, index) => (
           <Message
             key={index}
             speaker={message.speaker}
             text={message.text}
+            containerRef={containerRef}
             index={index}
             isHighlighted={index === currentMessageIndex}
             emotionData={emotionData}
