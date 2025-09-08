@@ -162,8 +162,8 @@ serve(async (req) => {
     let summaryContent = 'Summary not yet generated'
     if (session.summary_url && session.summary_status === 'completed') {
       try {
-        // The summary_url from database is just the blob path, need to construct full URL
-        const summaryBlobPath = session.summary_url
+        // The summary_url from database is just the relative path, construct proper storage path
+        const summaryBlobPath = `sessions/${session.summary_url}`
         console.log('Summary blob path:', summaryBlobPath)
         
         // Use Supabase client to get the signed URL for the blob
