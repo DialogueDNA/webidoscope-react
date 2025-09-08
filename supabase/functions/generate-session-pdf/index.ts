@@ -15,86 +15,85 @@ interface SessionData {
   summary: string
 }
 
-function generateSimplePDF(sessionData: SessionData): Uint8Array {
-  // Simple PDF structure - this is a basic implementation
-  const content = `%PDF-1.4
+function generatePDFContent(sessionData: SessionData): string {
+  const title = sessionData.title || 'Session Summary'
+  const date = new Date(sessionData.created_at).toLocaleDateString()
+  const duration = sessionData.duration ? `${Math.floor(sessionData.duration / 60)} minutes` : 'Unknown'
+  const participants = sessionData.participants?.join(', ') || 'Unknown'
+  
+  // Clean summary text for PDF
+  const cleanSummary = sessionData.summary.replace(/[^\x20-\x7E\n]/g, ' ').substring(0, 2000)
+  
+  return `%PDF-1.4
 1 0 obj
-<<
-/Type /Catalog
-/Pages 2 0 R
->>
+<< /Type /Catalog /Pages 2 0 R >>
 endobj
 
 2 0 obj
-<<
-/Type /Pages
-/Kids [3 0 R]
-/Count 1
->>
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
 endobj
 
 3 0 obj
 <<
 /Type /Page
-/Parent 2 0 R
-/Resources <<
-/Font <<
-/F1 4 0 R
->>
->>
+/Parent 2 0 R  
 /MediaBox [0 0 612 792]
-/Contents 5 0 R
+/Contents 4 0 R
+/Resources << /Font << /F1 5 0 R /F2 6 0 R >> >>
 >>
 endobj
 
 4 0 obj
-<<
-/Type /Font
-/Subtype /Type1
-/BaseFont /Helvetica
->>
-endobj
-
-5 0 obj
-<<
-/Length ${JSON.stringify(sessionData).length + 200}
->>
+<< /Length 7 0 R >>
 stream
 BT
+/F2 16 Tf
+50 720 Td
+(${title}) Tj
+0 -30 Td
 /F1 12 Tf
-72 720 Td
-(Session Summary: ${sessionData.title}) Tj
+(Date: ${date}) Tj
 0 -20 Td
-(Date: ${new Date(sessionData.created_at).toLocaleDateString()}) Tj
+(Duration: ${duration}) Tj
 0 -20 Td
-(Duration: ${sessionData.duration ? Math.floor(sessionData.duration / 60) + ' minutes' : 'Unknown'}) Tj
-0 -20 Td
-(Participants: ${sessionData.participants?.join(', ') || 'Unknown'}) Tj
+(Participants: ${participants}) Tj
 0 -40 Td
+/F2 14 Tf
 (Summary:) Tj
-0 -20 Td
+0 -25 Td
+/F1 11 Tf
+(${cleanSummary.replace(/\n/g, ') Tj\n0 -15 Td\n(')}) Tj
 ET
 endstream
 endobj
 
-xref
-0 6
-0000000000 65535 f 
-0000000015 00000 n 
-0000000074 00000 n 
-0000000131 00000 n 
-0000000291 00000 n 
-0000000370 00000 n 
-trailer
-<<
-/Size 6
-/Root 1 0 R
->>
-startxref
-${500 + JSON.stringify(sessionData).length}
-%%EOF`
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
 
-  return new TextEncoder().encode(content)
+6 0 obj  
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+
+7 0 obj
+${1000 + cleanSummary.length}
+endobj
+
+xref
+0 8
+0000000000 65535 f
+0000000015 00000 n
+0000000074 00000 n
+0000000120 00000 n
+0000000179 00000 n
+0000000364 00000 n
+0000000445 00000 n
+0000000527 00000 n
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+550
+%%EOF`
 }
 
 serve(async (req) => {
@@ -117,31 +116,23 @@ serve(async (req) => {
 
     // Get JWT token from Authorization header
     const authHeader = req.headers.get('authorization')
-    if (!authHeader) {
-      return new Response('Authorization header is required', { 
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response('Valid Authorization header is required', { 
         status: 401,
         headers: corsHeaders 
       })
     }
 
+    const token = authHeader.replace('Bearer ', '')
+
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      },
-      global: {
-        headers: {
-          authorization: authHeader,
-        },
-      },
-    })
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Get the authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Verify the JWT token and get user
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     
     if (authError || !user) {
       console.error('Auth error:', authError)
@@ -191,7 +182,8 @@ serve(async (req) => {
     }
 
     // Generate PDF
-    const pdfBuffer = generateSimplePDF(sessionData)
+    const pdfContent = generatePDFContent(sessionData)
+    const pdfBuffer = new TextEncoder().encode(pdfContent)
     
     // Return PDF
     return new Response(pdfBuffer, {
