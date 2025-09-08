@@ -45,6 +45,7 @@ import {
 import { usePollUntilReady } from '@/hooks/usePollUntilReady';
 import { toast } from '@/hooks/use-toast';
 import { apiClient } from '@/lib/apiClient';
+import { supabase } from '@/integrations/supabase/client';
 
 const SessionSummary: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -197,24 +198,30 @@ const SessionSummary: React.FC = () => {
   const handleBackToSessions = () => navigate('/sessions');
 
   const handleDownloadPDF = async () => {
-    if (!resolvedSummary || !metadata) return;
+    if (!metadata) return;
     try {
-      const response = await fetch(`/api/summary/${metadata.id}/download`, {
+      const response = await fetch(`https://vyihpwcrioptkvafqfmw.supabase.co/functions/v1/generate-session-pdf/${metadata.id}`, {  
         method: 'GET',
-        headers: { 'Content-Type': 'application/pdf' },
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Content-Type': 'application/json',
+        },
       });
+      
       if (!response.ok) throw new Error('Failed to generate PDF');
+      
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${metadata.title}-summary.pdf`;
+      a.download = `${metadata.title.replace(/[^a-zA-Z0-9]/g, '-')}-summary.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       toast({ title: 'Success', description: 'PDF downloaded successfully' });
     } catch (error) {
+      console.error('PDF download error:', error);
       toast({
         title: 'Error',
         description: 'Failed to download PDF. Please try again.',
@@ -312,7 +319,7 @@ const SessionSummary: React.FC = () => {
     return parts.join(' ');
   };
 
-  const renderMarkdown = (markdown: string) => marked.parse(markdown);
+  const renderMarkdown = (markdown: string) => marked.parse(markdown) as string;
 
   type TranscriptEntry = { 
     speaker: string; 
