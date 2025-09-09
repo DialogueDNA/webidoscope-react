@@ -13,7 +13,9 @@ import { toast } from '@/hooks/use-toast';
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const {
+    signOut
+  } = useAuth();
 
   /**
    * Checks if the given path matches the current location.
@@ -32,25 +34,23 @@ const Navbar = () => {
       await signOut();
       toast({
         title: "Success",
-        description: "You have been logged out",
+        description: "You have been logged out"
       });
       navigate('/');
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to log out",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
-
-  return (
-    <nav className="w-full px-6 py-4 flex items-center justify-between bg-white border-b border-gray-100 animate-fade-in">
+  return <nav className="w-full px-6 py-4 flex items-center justify-between bg-white border-b border-gray-100 animate-fade-in">
       {/* Logo and app name */}
       <div className="flex items-center space-x-2">
         <div className="h-8 w-8 bg-black rounded-full"></div>
-        <span className="font-semibold text-lg text-black">EmotionAI Tool</span>
+        <span className="font-semibold text-lg text-black">
+DialogueDNA</span>
       </div>
 
       {/* Navigation links and actions */}
@@ -59,18 +59,12 @@ const Navbar = () => {
         <NavLink href="/sessions" active={isActive('/sessions')}>Sessions</NavLink>
         <NavLink href="/settings" active={isActive('/settings')}>Settings</NavLink>
         {/* Logout button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleLogout}
-          className="flex items-center gap-2 text-gray-600 hover:text-black"
-        >
+        <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-2 text-gray-600 hover:text-black">
           <LogOut size={16} />
           <span>Logout</span>
         </Button>
       </div>
-    </nav>
-  );
+    </nav>;
 };
 
 /**
@@ -84,21 +78,13 @@ interface NavLinkProps {
   children: React.ReactNode;
   active: boolean;
 }
-
-const NavLink = ({ href, children, active }: NavLinkProps) => {
-  return (
-    <Link
-      to={href}
-      className={cn(
-        "text-sm font-medium transition-colors hover:text-black relative",
-        active
-          ? "text-black after:content-[''] after:absolute after:w-full after:h-0.5 after:bg-black after:bottom-[-8px] after:left-0"
-          : "text-gray-600"
-      )}
-    >
+const NavLink = ({
+  href,
+  children,
+  active
+}: NavLinkProps) => {
+  return <Link to={href} className={cn("text-sm font-medium transition-colors hover:text-black relative", active ? "text-black after:content-[''] after:absolute after:w-full after:h-0.5 after:bg-black after:bottom-[-8px] after:left-0" : "text-gray-600")}>
       {children}
-    </Link>
-  );
+    </Link>;
 };
-
 export default Navbar;
