@@ -44,15 +44,6 @@ const Navbar = () => {
     }
   };
 
-  /**
-   * Shows a toast indicating the Live Dashboard feature is not yet available.
-   */
-  const handleLiveDashboardClick = () => {
-    toast({
-      title: "Coming Soon",
-      description: "Live Dashboard feature is currently under development",
-    });
-  };
 
   return (
     <nav className="w-full px-6 py-4 flex items-center justify-between bg-white border-b border-gray-100 animate-fade-in">
@@ -64,17 +55,6 @@ const Navbar = () => {
 
       {/* Navigation links and actions */}
       <div className="flex items-center space-x-8">
-        {/* Disabled Live Dashboard button with tooltip */}
-        <button
-          onClick={handleLiveDashboardClick}
-          className="text-sm font-medium transition-colors text-gray-400 cursor-not-allowed relative group"
-          disabled
-        >
-          Live Dashboard
-          <div className="absolute bottom-[-32px] left-1/2 transform -translate-x-1/2 bg-black text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            Coming Soon
-          </div>
-        </button>
         {/* Navigation links */}
         <NavLink href="/sessions" active={isActive('/sessions')}>Sessions</NavLink>
         <NavLink href="/settings" active={isActive('/settings')}>Settings</NavLink>
