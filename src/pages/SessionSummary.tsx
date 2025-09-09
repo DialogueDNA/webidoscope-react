@@ -31,7 +31,6 @@ import CollapsibleSection from '@/components/CollapsibleSection';
 import EmotionFilter from '@/components/EmotionFilter';
 
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 import {
@@ -197,38 +196,6 @@ const SessionSummary: React.FC = () => {
   // ---------- UI handlers ----------
   const handleBackToSessions = () => navigate('/sessions');
 
-  const handleDownloadPDF = async () => {
-    if (!metadata) return;
-    try {
-      const response = await fetch(`https://vyihpwcrioptkvafqfmw.supabase.co/functions/v1/generate-session-pdf/${metadata.id}`, {  
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to generate PDF');
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${metadata.title.replace(/[^a-zA-Z0-9]/g, '-')}-summary.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      toast({ title: 'Success', description: 'PDF downloaded successfully' });
-    } catch (error) {
-      console.error('PDF download error:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to download PDF. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
 
   const onOpenChangeDialog = (v: boolean) => {
     setOpenChangeDialog(v);
@@ -427,10 +394,6 @@ const SessionSummary: React.FC = () => {
               </Button>
               <Button variant="outline" onClick={() => onOpenChangeDialog(true)}>
                 Change summary type
-              </Button>
-              <Button onClick={handleDownloadPDF} className="bg-black text-white hover:bg-black/90 flex items-center gap-2">
-                <Download size={16} />
-                Download PDF
               </Button>
               <Button onClick={handleBackToSessions} variant="outline">
                 Back to Sessions
