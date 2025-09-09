@@ -72,7 +72,7 @@ const LoginForm = () => {
         <div className="h-12 w-12 bg-black dark:bg-white rounded-full"></div>
       </div>
       {/* Title */}
-      <h1 className="text-2xl font-semibold text-center mb-8">EmotionAI</h1>
+      <h1 className="text-2xl font-semibold text-center mb-8">DialogueDNA</h1>
 
       {/* Login form */}
       <form onSubmit={handleSubmit} className="space-y-6">
